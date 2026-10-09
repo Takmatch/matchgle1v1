@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: talkmatch-1a1
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_PIN
+        generateValue: false
+        value: xbox360.ñ.
