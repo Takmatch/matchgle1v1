@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cómo Funciona | TalkMatch 1v1 Videochat</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              yellow: '#F59E0B',
+              orange: '#EA580C',
+              coral: '#F97316',
+              amber: '#D97706',
+            },
+            dark: {
+              950: '#07090e',
+              900: '#0c1017',
+              850: '#111622',
+              800: '#161c2b',
+              700: '#232b3e',
+              600: '#333e56'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-dark-950 text-slate-100 font-sans min-h-screen antialiased selection:bg-amber-500 selection:text-black flex flex-col justify-between">
+
+  <!-- Barra Superior -->
+  <nav class="border-b border-dark-800 bg-dark-950/80 backdrop-blur sticky top-0 z-30 px-4 sm:px-8 py-3.5">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 group">
+        <img src="/logo.svg" alt="TalkMatch 1v1" class="h-9 w-auto">
+      </a>
+
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5 bg-dark-900 border border-dark-700 px-3.5 py-1.5 rounded-xl">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Volver al Inicio</span>
+        </a>
+        <a href="/" class="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-950 font-black text-xs transition shadow-md">
+          Entrar al Chat
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full space-y-12">
+    
+    <!-- Header -->
+    <div class="text-center space-y-3">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Guía Rápida de Uso</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+        ¿Cómo Funciona <span class="text-amber-400">TalkMatch 1v1?</span>
+      </h1>
+      <p class="text-sm text-slate-400 max-w-xl mx-auto">
+        Conéctate en menos de 5 segundos sin descargar nada, sin registrar cuentas y con tu dirección IP protegida.
+      </p>
+    </div>
+
+    <!-- Los 4 Pasos Intuitivos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Paso 1 -->
+      <div class="bg-dark-900 border border-dark-800 rounded-3xl p-6 sm:p-7 space-y-3 hover:border-amber-500/30 transition">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-black text-lg">
+          01
+        </div>
+        <h3 class="text-xl font-bold text-white">Elige una de las 3 Salas</h3>
+        <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+          Accede al lobby y selecciona entre <strong>Sala 1</strong>, <strong>Sala 2</strong> o <strong>Sala 3</strong>. Cada sala tiene un límite estricto de 2 personas para garantizar un encuentro 1 a 1 exclusivo.
+        </p>
+      </div>
+
+      <!-- Paso 2 -->
+      <div class="bg-dark-900 border border-dark-800 rounded-3xl p-6 sm:p-7 space-y-3 hover:border-amber-500/30 transition">
+        <div class="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-black text-lg">
+          02
+        </div>
+        <h3 class="text-xl font-bold text-white">Permite Cámara y Micrófono</h3>
+        <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+          Tu navegador te solicitará permiso para encender la cámara y el audio. Toda la transmisión ocurre en tu dispositivo mediante WebRTC cifrado.
+        </p>
+      </div>
+
+      <!-- Paso 3 -->
+      <div class="bg-dark-900 border border-dark-800 rounded-3xl p-6 sm:p-7 space-y-3 hover:border-amber-500/30 transition">
+        <div class="w-12 h-12 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-center justify-center font-black text-lg">
+          03
+        </div>
+        <h3 class="text-xl font-bold text-white">Match 1v1 en Pantalla Dividida</h3>
+        <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+          Una vez emparejados, verás tu cámara a la izquierda y a la otra persona a la derecha con video HD fluido, audio y chat de texto privado integrado.
+        </p>
+      </div>
+
+      <!-- Paso 4 -->
+      <div class="bg-dark-900 border border-dark-800 rounded-3xl p-6 sm:p-7 space-y-3 hover:border-amber-500/30 transition">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-lg">
+          04
+        </div>
+        <h3 class="text-xl font-bold text-white">Salta con el Botón "Próximo"</h3>
+        <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+          Si deseas cambiar de persona o buscar otra conversación, pulsa el botón blanco <strong>"Próximo"</strong> para pasar inmediatamente a la siguiente sala disponible.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Sección de Preguntas Frecuentes (FAQ) -->
+    <div class="space-y-6 pt-4">
+      <h2 class="text-2xl font-bold text-white text-center">Preguntas Frecuentes (FAQ)</h2>
+      
+      <div class="space-y-4">
+        
+        <div class="bg-dark-900 border border-dark-800 rounded-2xl p-5 space-y-2">
+          <h4 class="font-bold text-white text-sm flex items-center gap-2">
+            <i class="fa-solid fa-circle-question text-amber-400 text-xs"></i>
+            ¿Es 100% gratuito?
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Sí. No hay cobros ocultos ni límites de tiempo en las videollamadas.
+          </p>
+        </div>
+
+        <div class="bg-dark-900 border border-dark-800 rounded-2xl p-5 space-y-2">
+          <h4 class="font-bold text-white text-sm flex items-center gap-2">
+            <i class="fa-solid fa-circle-question text-amber-400 text-xs"></i>
+            ¿Otros usuarios pueden ver mi dirección IP o ubicación?
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            No. Utilizamos servidores de enrutamiento TURN Relay que ocultan tu dirección IP pública, protegiéndote frente a intentos de geolocalización o rastreo.
+          </p>
+        </div>
+
+        <div class="bg-dark-900 border border-dark-800 rounded-2xl p-5 space-y-2">
+          <h4 class="font-bold text-white text-sm flex items-center gap-2">
+            <i class="fa-solid fa-circle-question text-amber-400 text-xs"></i>
+            ¿Se graban las videollamadas?
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            No. No grabamos ni almacenamos ningún video en servidores. La transmisión fluye en vivo y desaparece al salir de la sala.
+          </p>
+        </div>
+
+        <div class="bg-dark-900 border border-dark-800 rounded-2xl p-5 space-y-2">
+          <h4 class="font-bold text-white text-sm flex items-center gap-2">
+            <i class="fa-solid fa-circle-question text-amber-400 text-xs"></i>
+            ¿Puedo usarlo desde mi móvil?
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Sí. Funciona en cualquier navegador de smartphone (Chrome, Safari, Firefox, Edge) e incluye un botón para alternar entre tu cámara frontal y trasera.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CTA Final -->
+    <div class="p-8 rounded-3xl bg-gradient-to-r from-amber-500/10 via-dark-900 to-dark-900 border border-amber-500/30 text-center space-y-4">
+      <h3 class="text-2xl font-bold text-white">Empieza tu primer chat ahora</h3>
+      <div>
+        <a href="/" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-dark-950 font-black text-sm shadow-xl shadow-amber-500/25 transition transform hover:scale-105">
+          <i class="fa-solid fa-play text-xs"></i>
+          <span>Entrar a TalkMatch 1v1</span>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-dark-800 bg-dark-950 px-4 sm:px-8 py-6 text-xs text-slate-500 text-center">
+    <p>&copy; 2026 TalkMatch 1v1. Plataforma de videochat privado para adultos (+18).</p>
+  </footer>
+
+</body>
+</html>

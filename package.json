@@ -1,0 +1,23 @@
+{
+  "name": "talkmatch-1a1",
+  "version": "1.0.0",
+  "description": "Aplicación de videochat 1 a 1 privado y anónimo con 3 salas y panel de moderación",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "keywords": [
+    "webrtc",
+    "socketio",
+    "videochat",
+    "p2p",
+    "privacy"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es" class="dark scroll-smooth h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TalkMatch 1v1 | Videochat Privado & Anónimo</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              yellow: '#F59E0B',
+              orange: '#EA580C',
+              coral: '#F97316',
+              amber: '#D97706',
+              gold: '#FBBF24',
+            },
+            dark: {
+              950: '#07090e',
+              900: '#0c1017',
+              850: '#111622',
+              800: '#161c2b',
+              700: '#232b3e',
+              600: '#333e56'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-dark-950 text-slate-100 font-sans min-h-screen antialiased selection:bg-amber-500 selection:text-black flex flex-col justify-between overflow-x-hidden">
+
+  <!-- ==================== 1. LANDING PAGE ==================== -->
+  <div id="landingScreen" class="min-h-screen flex flex-col justify-between relative overflow-hidden">
+    
+    <!-- Luces de fondo ambientales -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="absolute top-1/3 right-10 w-[30rem] h-[30rem] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+
+    <!-- Barra de Navegación Landing -->
+    <nav class="border-b border-dark-800/80 bg-dark-950/70 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 py-3.5">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-3 group">
+          <img src="/logo.svg" alt="TalkMatch 1v1" class="h-9 w-auto group-hover:scale-105 transition transform duration-200">
+        </a>
+
+        <!-- Enlaces Centro -->
+        <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
+          <a href="#salas" onclick="goToLobby()" class="text-amber-400 hover:text-amber-300 transition relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-amber-400">
+            Chat 1 a 1
+          </a>
+          <a href="/seguridad.html" class="hover:text-white transition">Seguridad (+18)</a>
+          <a href="/como-funciona.html" class="hover:text-white transition">Cómo Funciona</a>
+        </div>
+
+        <!-- Acciones Derecha -->
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:flex items-center gap-1.5 text-xs text-slate-300 bg-dark-900 border border-dark-700 px-3 py-1.5 rounded-full">
+            <i class="fa-solid fa-globe text-slate-400"></i>
+            <span class="font-medium">ES</span>
+          </div>
+
+          <button onclick="goToLobby()" class="px-5 py-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-dark-950 font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition transform duration-200">
+            Iniciar Chat
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-16 flex-1 flex flex-col justify-center">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        
+        <!-- Columna Izquierda (Textos y CTA) -->
+        <div class="lg:col-span-7 flex flex-col items-start space-y-6">
+          
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold tracking-wider uppercase">
+            <i class="fa-solid fa-fire-flame-curved text-amber-400"></i>
+            <span>Llamadas Privadas 1 a 1 · Match Instantáneo · Sin Registro</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-6xl xl:text-7xl font-black text-white leading-[1.05] tracking-tight uppercase">
+            VIDEOCHAT 1V1 Y<br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">CHAT PRIVADO CON</span><br>
+            DESCONOCIDOS<br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">AL INSTANTE.</span>
+          </h1>
+
+          <p class="text-sm sm:text-base text-slate-400 max-w-xl leading-relaxed">
+            Empieza un chat 1v1 gratis o una videollamada privada 1 a 1 con personas reales de todo el mundo. Videochat aleatorio protegido con IP oculta. Sin registro.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto pt-2">
+            <button onclick="goToLobby()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-dark-950 font-black text-sm tracking-wide shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-105 transition transform duration-200 flex items-center justify-center gap-3">
+              <i class="fa-solid fa-play text-xs"></i>
+              <span>INICIAR VIDEOCHAT AHORA</span>
+            </button>
+            <button onclick="goToLobby()" class="px-6 py-4 rounded-2xl bg-dark-900/80 hover:bg-dark-850 border border-dark-700 hover:border-dark-600 text-slate-200 font-bold text-sm tracking-wide transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-door-open text-amber-400"></i>
+              <span>EXPLORAR 3 SALAS</span>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-6 pt-4 text-xs font-semibold text-slate-400">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-lock text-amber-400"></i>
+              <span>Sin registro</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved text-amber-400"></i>
+              <span>IP 100% Oculta (Relay)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-bolt text-amber-400"></i>
+              <span>Match instantáneo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha (Card Mockup Interactiva) -->
+        <div class="lg:col-span-5 relative flex justify-center">
+          <div class="relative w-full max-w-md aspect-[4/5] rounded-3xl p-1 bg-gradient-to-b from-amber-400/60 via-dark-700 to-dark-800 shadow-2xl shadow-amber-500/10">
+            <div class="w-full h-full bg-dark-900 rounded-[22px] overflow-hidden relative flex flex-col justify-between p-4">
+              <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80');">
+                <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/30 to-dark-950/50"></div>
+              </div>
+
+              <div class="relative z-10 flex items-center justify-between">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-dark-950/80 backdrop-blur border border-white/10 text-xs font-semibold text-white">
+                  <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                  <span>Listo para el match</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-dark-950/80 backdrop-blur border border-white/10 text-xs text-slate-300 font-medium">
+                  <i class="fa-solid fa-lock text-amber-400 text-[10px]"></i>
+                  <span>Chat privado 1 a 1</span>
+                </span>
+              </div>
+
+              <div class="relative z-10 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3 bg-dark-950/80 backdrop-blur-md p-2.5 rounded-2xl border border-white/10">
+                  <div class="flex items-center gap-2">
+                    <button class="w-10 h-10 rounded-xl bg-dark-800/80 hover:bg-dark-700 text-slate-300 flex items-center justify-center transition">
+                      <i class="fa-solid fa-video text-xs"></i>
+                    </button>
+                    <button class="w-10 h-10 rounded-xl bg-dark-800/80 hover:bg-dark-700 text-slate-300 flex items-center justify-center transition">
+                      <i class="fa-solid fa-microphone text-xs"></i>
+                    </button>
+                  </div>
+                  
+                  <button onclick="goToLobby()" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-black text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-orange-500/30 transition">
+                    <span>SIGUIENTE</span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-dark-800 bg-dark-950 px-4 sm:px-8 py-8 text-xs text-slate-500">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-300">TALKMATCH 1v1</span>
+          <span>&copy; 2026. Todos los derechos reservados.</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="/seguridad.html" class="hover:text-slate-300 transition">Términos & Seguridad (+18)</a>
+          <a href="/como-funciona.html" class="hover:text-slate-300 transition">Cómo Funciona</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== 2. MODAL +18 OBLIGATORIO (AGE GATE) ==================== -->
+  <div id="ageGateModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-dark-900 border border-dark-700 max-w-lg w-full rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div class="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-black">
+          18+
+        </div>
+        <h2 class="text-2xl font-bold tracking-tight text-white">Acceso Restringido para Adultos</h2>
+        <p class="text-xs text-slate-400 mt-1">Este servicio contiene interacciones en vivo exclusivas para mayores de edad.</p>
+      </div>
+
+      <div class="space-y-3 bg-dark-950/80 p-4 rounded-2xl border border-dark-800 text-xs text-slate-300 leading-relaxed mb-6">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="checkAge" class="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-400 bg-dark-800 border-dark-600 cursor-pointer">
+          <span>Declaro bajo mi responsabilidad que <strong>tengo 18 años o más</strong> y la mayoría de edad en mi país.</span>
+        </label>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="checkRecording" class="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-400 bg-dark-800 border-dark-600 cursor-pointer">
+          <span>Acepto que está <strong>estrictamente prohibido grabar</strong> o difundir imágenes de otras personas sin consentimiento.</span>
+        </label>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="checkModeration" class="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-400 bg-dark-800 border-dark-600 cursor-pointer">
+          <span>Comprendo que las salas cuentan con <strong>supervisión y moderación</strong> para mantener la seguridad comunitaria.</span>
+        </label>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <button id="btnAcceptAge" disabled class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-dark-950 font-black tracking-wide shadow-lg shadow-amber-500/25 transition duration-200">
+          Entrar a las Salas
+        </button>
+        <button onclick="closeAgeGateModal()" class="text-center text-xs text-slate-500 hover:text-slate-400 py-2">
+          Cancelar y Volver
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 3. NUEVA PANTALLA OOHCAM MATCHMAKER (SALA 1 / 2 / 3) ==================== -->
+  <div id="lobbyScreen" class="min-h-screen flex flex-col justify-between hidden bg-dark-950 select-none">
+    
+    <!-- Top Nav Matchmaker -->
+    <header class="w-full px-4 sm:px-8 py-3.5 border-b border-dark-800/80 bg-dark-950 flex items-center justify-between z-20">
+      
+      <!-- Logo y Selector de Sala -->
+      <div class="flex items-center gap-4">
+        <button onclick="goToLanding()" class="flex items-center group">
+          <img src="/logo.svg" alt="TalkMatch 1v1" class="h-8 w-auto group-hover:scale-105 transition transform duration-200">
+        </button>
+
+        <!-- Selector de Salas (Pills Centrados: SALA 1 / SALA 2 / SALA 3) -->
+        <div class="flex items-center bg-dark-900 border border-dark-700/80 p-1 rounded-2xl gap-1">
+          <button onclick="switchActiveLobbyRoom('sala-1')" id="tab-sala-1" class="px-3.5 py-1.5 rounded-xl text-xs font-black tracking-wider transition bg-amber-500 text-dark-950 shadow-md">
+            SALA 1
+          </button>
+          <button onclick="switchActiveLobbyRoom('sala-2')" id="tab-sala-2" class="px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white">
+            SALA 2
+          </button>
+          <button onclick="switchActiveLobbyRoom('sala-3')" id="tab-sala-3" class="px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white">
+            SALA 3
+          </button>
+        </div>
+      </div>
+
+      <!-- Acciones Derecha -->
+      <div class="flex items-center gap-3">
+        <div id="adminBadge" class="hidden px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-crown"></i> Admin
+        </div>
+
+        <button id="btnOpenAdminModal" class="px-3.5 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-800 border border-dark-700 text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-amber-400"></i>
+          <span class="hidden sm:inline">Administrador</span>
+        </button>
+
+        <button onclick="goToLanding()" class="w-9 h-9 rounded-xl bg-dark-900 hover:bg-dark-800 border border-dark-700 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL: OOHCAM CONSTELLATION & READY TO MATCH -->
+    <main class="flex-1 max-w-[1700px] w-full mx-auto px-4 sm:px-8 py-6 flex flex-col lg:flex-row gap-6 items-stretch justify-center">
+      
+      <!-- IZQUIERDA: CONSTELACIÓN FLOTANTE DE AVATARES / PARTICIPANTES (ESTILO OOHCAM) -->
+      <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800/90 relative overflow-hidden min-h-[420px] lg:min-h-[560px] flex items-center justify-center p-6 shadow-2xl">
+        
+        <!-- Partículas y Destellos de Fondo -->
+        <div class="absolute inset-0 constellation-grid pointer-events-none opacity-40"></div>
+        <div class="star star-1">✨</div>
+        <div class="star star-2">✨</div>
+        <div class="star star-3">✨</div>
+        <div class="star star-4">✨</div>
+        <div class="star star-5">✨</div>
+
+        <!-- Avatares Flotantes Orbitares -->
+        <div class="relative w-full h-full max-w-lg max-h-[500px] flex items-center justify-center">
+          
+          <!-- Avatar Central Destacado con Glow Dorado -->
+          <div class="absolute z-20 animate-pulse-glow">
+            <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl p-1 bg-gradient-to-tr from-amber-400 via-orange-500 to-amber-300 shadow-2xl shadow-amber-500/40">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" alt="Match" class="w-full h-full object-cover rounded-[22px]">
+            </div>
+          </div>
+
+          <!-- Avatar Superior Izquierda -->
+          <div class="absolute -top-2 left-6 sm:left-12 floating-item-1">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-90">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
+            </div>
+          </div>
+
+          <!-- Avatar Superior Derecha -->
+          <div class="absolute top-4 right-6 sm:right-12 floating-item-2">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-90">
+              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
+            </div>
+          </div>
+
+          <!-- Avatar Centro Izquierda -->
+          <div class="absolute left-0 sm:left-4 top-1/2 -translate-y-1/2 floating-item-3">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-80">
+              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
+            </div>
+          </div>
+
+          <!-- Avatar Centro Derecha -->
+          <div class="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 floating-item-1">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-80">
+              <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
+            </div>
+          </div>
+
+          <!-- Avatar Inferior Izquierda -->
+          <div class="absolute -bottom-2 left-12 sm:left-20 floating-item-2">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-85">
+              <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
+            </div>
+          </div>
+
+          <!-- Avatar Inferior Derecha -->
+          <div class="absolute -bottom-2 right-12 sm:right-20 floating-item-3">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-85">
+              <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Indicador flotante en esquina izquierda -->
+        <div class="absolute top-4 left-4 bg-dark-950/80 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-slate-300 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="lobbyActiveRoomTitle">Sala 1 · Match Activo</span>
+        </div>
+      </div>
+
+      <!-- DERECHA: PANEL "READY TO MATCH?" CON BOTÓN DORADO (ESTILO OOHCAM LIMPIO) -->
+      <div class="w-full lg:w-[480px] bg-dark-900 rounded-3xl border border-dark-800/90 p-6 sm:p-10 flex flex-col justify-center gap-8 shadow-2xl relative">
+        
+        <!-- Cabecera del Panel -->
+        <div class="flex flex-col items-center text-center space-y-3">
+          <div class="text-amber-400 text-2xl animate-pulse">✨</div>
+          <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            Ready to <span class="text-amber-400">match?</span>
+          </h2>
+          <p class="text-xs text-slate-400 max-w-xs">
+            Conexión instantánea de video 1 a 1 de alta calidad y 100% anónima.
+          </p>
+        </div>
+
+        <!-- Estado de la Sala y Botón Principal "Start Matching" -->
+        <div class="space-y-4">
+          
+          <!-- Badge de Ocupación de la Sala Activa -->
+          <div class="flex items-center justify-between p-4 rounded-2xl bg-dark-950 border border-dark-800">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-black text-sm">
+                1v1
+              </div>
+              <div>
+                <div class="text-sm font-bold text-white" id="selectedRoomLabel">Sala 1</div>
+                <div class="text-xs text-slate-400">Videochat privado en vivo</div>
+              </div>
+            </div>
+            <span id="selectedRoomBadge" class="text-xs px-3 py-1.5 rounded-full font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              0 / 2 (Libre)
+            </span>
+          </div>
+
+          <!-- BOTÓN DORADO GIGANTE OOHCAM (START MATCHING) -->
+          <button id="btnStartMatching" onclick="joinActiveLobbyRoom()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-dark-950 font-black text-base tracking-wide shadow-2xl shadow-amber-500/40 hover:shadow-amber-500/60 hover:scale-[1.02] transition transform duration-150 flex items-center justify-center gap-2 cursor-pointer">
+            <span>Start Matching</span>
+          </button>
+        </div>
+
+        <!-- Footer del Panel -->
+        <div class="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5 pt-4 border-t border-dark-800/80">
+          <i class="fa-solid fa-shield-halved text-amber-400/80"></i>
+          <span>Be kind. No private info. Keep it fun. (+18)</span>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ==================== 4. INTERFAZ PROFESIONAL DE VIDEOCHAT (ESTILO MEETGLE) ==================== -->
+  <div id="roomScreen" class="fixed inset-0 z-40 bg-dark-950 hidden flex flex-col justify-between overflow-hidden select-none">
+    
+    <!-- Header Superior Flotante Minimalista -->
+    <header class="w-full px-4 sm:px-6 py-3 flex items-center justify-between z-30 bg-gradient-to-b from-dark-950/90 to-transparent">
+      <!-- Logo y Sala -->
+      <div class="flex items-center gap-3">
+        <span class="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+          TALK<span class="text-amber-400">MATCH</span>
+        </span>
+        <span id="currentRoomName" class="text-xs px-2.5 py-1 rounded-full bg-dark-850 border border-dark-700 text-slate-300 font-bold">
+          Sala 1
+        </span>
+        <!-- Indicador Discreto de Seguridad -->
+        <span id="moderatorNotice" title="Supervisión comunitaria activa" class="hidden items-center gap-1 px-2 py-0.5 rounded-full bg-dark-800/80 border border-dark-700 text-[10px] text-slate-400">
+          <i class="fa-solid fa-shield-halved text-[9px] text-amber-400"></i>
+          <span>Seguridad</span>
+        </span>
+      </div>
+
+      <!-- Temporizador y Controles Rápidos -->
+      <div class="flex items-center gap-3">
+        <div id="callTimer" class="text-xs font-mono text-slate-300 bg-dark-900/90 backdrop-blur px-3 py-1.5 rounded-full border border-dark-700">
+          00:00
+        </div>
+        
+        <button id="btnLeaveRoom" class="w-8 h-8 rounded-full bg-dark-800 hover:bg-red-600/80 text-slate-300 hover:text-white transition flex items-center justify-center text-xs border border-dark-700">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL: DUAL SCREEN 50/50 (PANTALLA DIVIDIDA DUAL) -->
+    <div class="flex-1 w-full max-w-[1700px] mx-auto px-3 sm:px-6 pb-20 pt-1 flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch justify-center relative overflow-hidden">
+      
+      <!-- CONTENEDOR NORMAL (1 A 1) -->
+      <div id="normalDualCanvas" class="w-full h-full flex flex-col md:flex-row gap-3 sm:gap-4 flex-1">
+        
+        <!-- PANTALLA IZQUIERDA: TU CÁMARA (LOCAL) -->
+        <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800/90 relative overflow-hidden shadow-2xl flex items-center justify-center group">
+          <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+          
+          <!-- Badge Superior Izquierdo -->
+          <div class="absolute top-4 left-4 bg-dark-950/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Tú (Cámara local)</span>
+          </div>
+
+          <!-- Botón de voltear cámara (móvil) -->
+          <button id="btnSwitchCam" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-dark-950/70 backdrop-blur-md border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition sm:hidden">
+            <i class="fa-solid fa-camera-rotate text-xs"></i>
+          </button>
+        </div>
+
+        <!-- PANTALLA DERECHA: PARTICIPANTE REMOTO -->
+        <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800/90 relative overflow-hidden shadow-2xl flex items-center justify-center group">
+          <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+          
+          <!-- Badge Superior Derecho -->
+          <div class="absolute top-4 left-4 bg-dark-950/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span>Desconocido (1v1)</span>
+          </div>
+
+          <!-- Botón de Reporte (Bandera) -->
+          <button onclick="reportCurrentPeer()" title="Reportar usuario por conducta inapropiada" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-dark-950/70 backdrop-blur-md border border-white/10 text-slate-400 hover:text-red-400 hover:border-red-500/40 flex items-center justify-center transition">
+            <i class="fa-solid fa-flag text-xs"></i>
+          </button>
+
+          <!-- Placeholder de Espera cuando la sala no tiene match todavía -->
+          <div id="waitingPlaceholder" class="absolute inset-0 bg-dark-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+            <div class="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mb-4 animate-bounce">
+              <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Buscando a tu match...</h3>
+            <p class="text-xs text-slate-400 max-w-sm">Comparte el enlace o espera en esta sala. Cuando otra persona entre, se conectará automáticamente.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CONTENEDOR MODO ADMINISTRADOR (SUPERVISIÓN DUAL) -->
+      <div id="adminVideoArea" class="hidden w-full h-full flex flex-col md:flex-row gap-3 sm:gap-4 flex-1">
+        <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800 relative overflow-hidden flex items-center justify-center">
+          <video id="adminVideo1" autoplay playsinline class="w-full h-full object-cover"></video>
+          <div class="absolute top-4 left-4 bg-dark-950/80 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-amber-300 border border-amber-500/30">
+            Participante 1
+          </div>
+          <div id="adminFallback1" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs">
+            Esperando participante 1...
+          </div>
+        </div>
+
+        <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800 relative overflow-hidden flex items-center justify-center">
+          <video id="adminVideo2" autoplay playsinline class="w-full h-full object-cover"></video>
+          <div class="absolute top-4 left-4 bg-dark-950/80 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-amber-300 border border-amber-500/30">
+            Participante 2
+          </div>
+          <div id="adminFallback2" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs">
+            Esperando participante 2...
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DOCK FLOTANTE DE CONTROLES INFERIORES -->
+    <div class="fixed bottom-4 left-0 right-0 z-30 px-4 flex items-center justify-center pointer-events-none">
+      <div class="flex items-center gap-3 sm:gap-4 pointer-events-auto">
+        
+        <!-- Pill de Modo / Salas (Izquierda) -->
+        <div class="hidden lg:flex items-center gap-3 bg-dark-900/90 backdrop-blur-xl border border-dark-700 px-4 py-2 rounded-full shadow-2xl">
+          <div class="flex -space-x-2">
+            <span class="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-[10px] text-dark-950 font-black">1</span>
+            <span class="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-[10px] text-dark-950 font-black">2</span>
+            <span class="w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center text-[10px] text-dark-950 font-black">3</span>
+          </div>
+          <span class="text-xs font-bold text-white">Salas 1 a 1</span>
+          <button onclick="leaveCurrentRoom()" class="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold hover:bg-amber-500 hover:text-dark-950 transition">
+            Cambiar
+          </button>
+        </div>
+
+        <!-- Barra Central de Botones Circulares -->
+        <div class="bg-dark-900/90 backdrop-blur-xl border border-dark-700 px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 sm:gap-3">
+          
+          <button id="btnToggleMic" title="Silenciar / Activar micrófono" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600">
+            <i class="fa-solid fa-microphone text-sm"></i>
+          </button>
+
+          <button id="btnToggleCam" title="Apagar / Encender cámara" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600">
+            <i class="fa-solid fa-video text-sm"></i>
+          </button>
+
+          <button onclick="leaveCurrentRoom()" title="Finalizar llamada" class="w-11 h-11 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition shadow-lg shadow-red-600/30">
+            <i class="fa-solid fa-stop text-sm"></i>
+          </button>
+
+          <!-- BOTÓN PRINCIPAL PRÓXIMO -->
+          <button onclick="nextRoomQuick()" class="h-11 px-6 rounded-full bg-white hover:bg-slate-200 text-dark-950 font-black text-xs sm:text-sm tracking-wide flex items-center gap-2 shadow-xl hover:scale-105 transition transform duration-150">
+            <i class="fa-solid fa-forward-step text-xs"></i>
+            <span>Próximo</span>
+          </button>
+
+          <!-- Chat Toggle -->
+          <button id="btnToggleChatDrawer" title="Abrir / Cerrar Chat" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600 relative">
+            <i class="fa-solid fa-comment-dots text-sm"></i>
+            <span id="chatUnreadDot" class="hidden absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PANEL FLOTANTE DE CHAT -->
+    <div id="chatDrawer" class="fixed top-16 right-4 bottom-24 w-80 sm:w-96 bg-dark-900/95 backdrop-blur-xl border border-dark-700 rounded-3xl shadow-2xl flex flex-col z-30 transition-all duration-300 transform translate-x-[110%]">
+      <div class="p-3.5 border-b border-dark-700/80 flex items-center justify-between text-xs font-bold text-white">
+        <span class="flex items-center gap-2">
+          <i class="fa-solid fa-comments text-amber-400"></i>
+          <span>Mensajes de la Sala</span>
+        </span>
+        <button id="btnCloseChatDrawer" class="text-slate-400 hover:text-white text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="chatMessages" class="flex-1 p-3.5 overflow-y-auto space-y-2.5 text-xs">
+        <div class="text-center text-slate-500 text-[11px] py-2 bg-dark-950/60 rounded-xl border border-dark-800">
+          🔒 Conversación privada y cifrada.
+        </div>
+      </div>
+
+      <form id="chatForm" class="p-3 border-t border-dark-700/80 bg-dark-950/80 rounded-b-3xl flex items-center gap-2">
+        <input type="text" id="chatInput" placeholder="Escribe un mensaje..." maxlength="300" autocomplete="off" class="flex-1 bg-dark-800 border border-dark-600 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-500">
+        <button type="submit" class="w-9 h-9 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-950 font-bold flex items-center justify-center transition">
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- ==================== 5. MODAL LOGIN DE ADMINISTRADOR ==================== -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-dark-900 border border-dark-700 max-w-sm w-full rounded-3xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-key text-amber-400"></i> Acceso Administrador
+        </h3>
+        <button id="btnCloseAdminModal" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">Introduce tu clave secreta para entrar en modo supervisor y auditar las salas.</p>
+      
+      <form id="adminLoginForm" class="space-y-4">
+        <div>
+          <input type="password" id="adminPinInput" placeholder="Introduce tu clave secreta..." class="w-full bg-dark-950 border border-dark-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+          <p id="adminErrorMsg" class="hidden text-xs text-red-400 mt-1.5">Clave incorrecta.</p>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 font-bold text-dark-950 text-sm transition">
+          Verificar Acceso
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Socket.io Client -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
