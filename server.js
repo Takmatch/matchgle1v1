@@ -202,7 +202,7 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, () => {
   console.log(`===============================================`);
-  console.log(`🚀 Servidor TalkMatch 1a1 iniciado en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor PrivaCam 1v1 iniciado en http://localhost:${PORT}`);
   console.log(`🛡️ Acceso de Administrador Protegido`);
   console.log(`===============================================`);
 });

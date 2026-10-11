@@ -1,4 +1,4 @@
-# 🔒 TalkMatch 1 a 1 | Videochat Privado & Seguro (+18)
+# 🔒 PrivaCam 1v1 | Videochat Privado & Seguro (+18)
 
 Aplicación web de videochat 1 a 1 con 3 salas privadas, enrutamiento WebRTC anónimo (IP protegida con TURN Relay) y panel de supervisión/moderación para el creador.
 
