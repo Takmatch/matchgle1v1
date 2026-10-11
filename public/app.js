@@ -53,7 +53,6 @@ const previewVideo = document.getElementById('previewVideo');
 const previewFallback = document.getElementById('previewFallback');
 const previewMaskBadge = document.getElementById('previewMaskBadge');
 const previewBlurLabel = document.getElementById('previewBlurLabel');
-const liveOnlineStats = document.getElementById('liveOnlineStats');
 const btnTogglePreviewMic = document.getElementById('btnTogglePreviewMic');
 const btnTogglePreviewCam = document.getElementById('btnTogglePreviewCam');
 const tabModeAuto = document.getElementById('tabModeAuto');
@@ -188,9 +187,6 @@ if (onlineCountText) {
     const delta = Math.floor(Math.random() * 7) - 3;
     baseCount = Math.max(3700, baseCount + delta);
     onlineCountText.textContent = `${baseCount.toLocaleString()} en línea ahora`;
-    if (liveOnlineStats) {
-      liveOnlineStats.textContent = `${baseCount.toLocaleString()} en línea ahora`;
-    }
   }, 4000);
 }
 
