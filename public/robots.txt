@@ -6,4 +6,4 @@ Allow: /como-funciona.html
 Allow: /seguridad.html
 
 # Sitemap oficial para motores de busqueda (Google, Bing)
-Sitemap: https://talkmatch-1a1.onrender.com/sitemap.xml
+Sitemap: https://matchgle1v1.onrender.com/sitemap.xml

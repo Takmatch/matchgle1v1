@@ -13,7 +13,7 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PIN = process.env.ADMIN_PIN || 'xbox360.ñ.';
+const ADMIN_PIN = process.env.ADMIN_PIN || process.env.admin || 'xbox360.ñ.';
 
 // Middleware de archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
