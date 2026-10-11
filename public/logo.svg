@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 100" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 100" width="100%" height="100%">
   <defs>
     <!-- Gradiente del Icono -->
     <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -7,8 +7,8 @@
       <stop offset="100%" stop-color="#EA580C" />
     </linearGradient>
 
-    <!-- Gradiente del Texto CAM -->
-    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <!-- Gradiente del Texto GLE -->
+    <linearGradient id="gleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#FBBF24" />
       <stop offset="100%" stop-color="#F59E0B" />
     </linearGradient>
@@ -22,7 +22,7 @@
 
   <!-- EMBLEMA CÁMARA (Lado Izquierdo) -->
   <g transform="translate(6, 12)">
-    <!-- Cuerpo de la cámara -->
+    <!-- Cuerpo de la cámara con resplandor -->
     <rect x="0" y="16" width="60" height="52" rx="15" fill="url(#brandGrad)" filter="url(#glow)" opacity="0.35" />
     <rect x="0" y="16" width="60" height="52" rx="15" fill="url(#brandGrad)" />
     
@@ -38,13 +38,13 @@
     <path d="M 18 6 Q 18 16 28 16 Q 18 16 18 26 Q 18 16 8 16 Q 18 16 18 6 Z" fill="#FBBF24" />
   </g>
 
-  <!-- TEXTO INTEGRADO (PRIVA + CAM) -->
+  <!-- TEXTO MATCHGLE (MATCH en blanco + GLE en degradado ámbar) -->
   <text x="110" y="67" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Segoe UI', sans-serif" font-size="46" font-weight="900" letter-spacing="-1">
-    <tspan fill="#FFFFFF">PRIVA</tspan><tspan fill="url(#textGrad)">CAM</tspan>
+    <tspan fill="#FFFFFF">MATCH</tspan><tspan fill="url(#gleGrad)">GLE</tspan>
   </text>
 
   <!-- BADGE 1v1 -->
-  <g transform="translate(425, 34)">
+  <g transform="translate(460, 34)">
     <rect x="0" y="0" width="58" height="30" rx="9" fill="#F59E0B" fill-opacity="0.18" stroke="#F59E0B" stroke-width="1.8" stroke-opacity="0.5" />
     <text x="29" y="20.5" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Segoe UI', sans-serif" font-size="14" font-weight="900" fill="#FBBF24" text-anchor="middle" letter-spacing="0.5">1v1</text>
   </g>

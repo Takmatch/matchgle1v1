@@ -97,7 +97,7 @@ const adminErrorMsg = document.getElementById('adminErrorMsg');
 // ==================== 1. NAVEGACIÓN Y LANDING PAGE ====================
 
 window.goToLobby = function () {
-  if (sessionStorage.getItem('privacam_age_accepted') !== 'true') {
+  if (sessionStorage.getItem('matchgle_age_accepted') !== 'true') {
     ageGateModal.classList.remove('hidden');
     ageGateModal.classList.add('flex');
   } else {
@@ -161,7 +161,7 @@ checkRecording.addEventListener('change', checkAgeGateCheckboxes);
 checkModeration.addEventListener('change', checkAgeGateCheckboxes);
 
 btnAcceptAge.addEventListener('click', () => {
-  sessionStorage.setItem('privacam_age_accepted', 'true');
+  sessionStorage.setItem('matchgle_age_accepted', 'true');
   ageGateModal.classList.add('hidden');
   ageGateModal.classList.remove('flex');
   showLobby();

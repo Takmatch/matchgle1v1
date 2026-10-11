@@ -1,5 +1,5 @@
 {
-  "name": "privacam-1v1",
+  "name": "matchgle-1v1",
   "version": "1.0.0",
   "description": "Aplicación de videochat 1 a 1 privado y anónimo con 3 salas y panel de moderación",
   "main": "server.js",

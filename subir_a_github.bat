@@ -1,9 +1,9 @@
 @echo off
-title Subir PrivaCam a GitHub y Render
+title Subir Matchgle a GitHub y Render
 color 0b
 
 echo ===================================================================
-echo          SUBIDA AUTOMATICA A GITHUB - PRIVACAM 1v1
+echo          SUBIDA AUTOMATICA A GITHUB - MATCHGLE 1v1
 echo ===================================================================
 echo.
 
