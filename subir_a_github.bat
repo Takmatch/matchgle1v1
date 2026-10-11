@@ -1,9 +1,9 @@
 @echo off
-title Subir TalkMatch a GitHub y Render
+title Subir PrivaCam a GitHub y Render
 color 0b
 
 echo ===================================================================
-echo          SUBIDA AUTOMATICA A GITHUB - TALKMATCH 1v1
+echo          SUBIDA AUTOMATICA A GITHUB - PRIVACAM 1v1
 echo ===================================================================
 echo.
 
