@@ -1,6 +1,8 @@
-# 🔒 Matchgle 1 a 1 | Videollamadas Gratis & Chat Privado (+18)
+# 🔥 Matchgle 1v1 | Videochat con Desconocidos & Alternativa a Omegle (+18)
 
-Aplicación web de videochat 1 a 1 con 3 salas privadas, enrutamiento WebRTC anónimo (IP protegida con TURN Relay) y panel de supervisión/moderación para el creador.
+🌐 **Sitio Web Oficial en Vivo:** [https://matchgle1v1.onrender.com/](https://matchgle1v1.onrender.com/)
+
+Plataforma web de videochat 1 a 1 continuo estilo Omegle con emparejamiento automático, filtros por género (Mujer ↔ Hombre), categorías temáticas, máscara de privacidad (Blur), IP oculta mediante TURN Relay y salas privadas.
 
 ---
 
