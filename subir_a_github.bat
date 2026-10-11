@@ -24,7 +24,7 @@ echo.
 echo Si se abre una ventana en tu navegador, haz clic en "Sign in with your browser" o "Authorize".
 echo.
 
-git push -u origin main
+git push -u origin main --force
 
 echo.
 if %errorlevel% equ 0 (
