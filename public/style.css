@@ -1,4 +1,4 @@
-/* Estilos personalizados para TalkMatch 1a1 */
+/* Estilos personalizados para Matchgle 1v1 (Omegle Engine +18) */
 
 /* Ocultar scrollbar pero permitir scroll suave */
 ::-webkit-scrollbar {
@@ -24,9 +24,15 @@
   transform: scaleX(-1);
 }
 
-/* Transiciones suaves */
+/* Efecto Máscara / Desenfoque de Privacidad (+18) */
+.camera-blurred {
+  filter: blur(24px) contrast(1.1) brightness(0.9) !important;
+  transition: filter 0.4s ease-in-out;
+}
+
+/* Transiciones suaves para video */
 video {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, filter 0.4s ease;
 }
 
 /* Efectos de resplandor para botones y bordes */
@@ -36,6 +42,10 @@ video {
 
 .glow-orange {
   box-shadow: 0 0 25px -5px rgba(234, 88, 12, 0.4);
+}
+
+.glow-erotic {
+  box-shadow: 0 0 35px -5px rgba(236, 72, 153, 0.35), 0 0 20px -2px rgba(245, 158, 11, 0.4);
 }
 
 /* Tipografía de impacto */
@@ -49,7 +59,35 @@ h1 {
   -webkit-backdrop-filter: blur(20px);
 }
 
-/* Animaciones de la Constelación de Avatares (Estilo OohCam) */
+/* Animaciones del Radar de Búsqueda Omegle */
+@keyframes radarWave {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.radar-ring-1 {
+  animation: radarWave 2.4s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.radar-ring-2 {
+  animation: radarWave 2.4s cubic-bezier(0.215, 0.61, 0.355, 1) 0.8s infinite;
+}
+
+.radar-ring-3 {
+  animation: radarWave 2.4s cubic-bezier(0.215, 0.61, 0.355, 1) 1.6s infinite;
+}
+
+/* Animaciones de la Constelación de Avatares */
 @keyframes floatSlow1 {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-10px) rotate(2deg); }

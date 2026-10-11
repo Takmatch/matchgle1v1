@@ -275,28 +275,27 @@
     </div>
   </div>
 
-  <!-- ==================== 3. NUEVA PANTALLA OOHCAM MATCHMAKER (SALA 1 / 2 / 3) ==================== -->
+  <!-- ==================== 3. PANTALLA MATCHMAKER AUTOMATIZADA ESTILO OMEGLE (+18) ==================== -->
   <div id="lobbyScreen" class="min-h-screen flex flex-col justify-between hidden bg-dark-950 select-none">
     
     <!-- Top Nav Matchmaker -->
     <header class="w-full px-4 sm:px-8 py-3.5 border-b border-dark-800/80 bg-dark-950 flex items-center justify-between z-20">
       
-      <!-- Logo y Selector de Sala -->
+      <!-- Logo y Selector de Modo -->
       <div class="flex items-center gap-4">
         <button onclick="goToLanding()" class="flex items-center group">
           <img src="/logo.svg" alt="Matchgle 1v1" class="h-8 w-auto group-hover:scale-105 transition transform duration-200">
         </button>
 
-        <!-- Selector de Salas (Pills Centrados: SALA 1 / SALA 2 / SALA 3) -->
+        <!-- Selector de Modo (Auto Match vs Suites Fijas) -->
         <div class="flex items-center bg-dark-900 border border-dark-700/80 p-1 rounded-2xl gap-1">
-          <button onclick="switchActiveLobbyRoom('sala-1')" id="tab-sala-1" class="px-3.5 py-1.5 rounded-xl text-xs font-black tracking-wider transition bg-amber-500 text-dark-950 shadow-md">
-            SALA 1
+          <button onclick="setLobbyMode('auto')" id="tabModeAuto" class="px-3.5 py-1.5 rounded-xl text-xs font-black tracking-wider transition bg-amber-500 text-dark-950 shadow-md flex items-center gap-1.5">
+            <i class="fa-solid fa-bolt text-xs"></i>
+            <span>AUTO MATCH 1v1</span>
           </button>
-          <button onclick="switchActiveLobbyRoom('sala-2')" id="tab-sala-2" class="px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white">
-            SALA 2
-          </button>
-          <button onclick="switchActiveLobbyRoom('sala-3')" id="tab-sala-3" class="px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white">
-            SALA 3
+          <button onclick="setLobbyMode('suites')" id="tabModeSuites" class="px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-door-closed text-xs"></i>
+            <span>SUITES FIJAS</span>
           </button>
         </div>
       </div>
@@ -304,7 +303,7 @@
       <!-- Acciones Derecha -->
       <div class="flex items-center gap-3">
         <div id="adminBadge" class="hidden px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
-          <i class="fa-solid fa-crown"></i> Admin
+          <i class="fa-solid fa-crown"></i> Admin ON
         </div>
 
         <button id="btnOpenAdminModal" class="px-3.5 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-800 border border-dark-700 text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
@@ -318,124 +317,160 @@
       </div>
     </header>
 
-    <!-- ÁREA PRINCIPAL: OOHCAM CONSTELLATION & READY TO MATCH -->
+    <!-- ÁREA PRINCIPAL MATCHMAKER -->
     <main class="flex-1 max-w-[1700px] w-full mx-auto px-4 sm:px-8 py-6 flex flex-col lg:flex-row gap-6 items-stretch justify-center">
       
-      <!-- IZQUIERDA: CONSTELACIÓN FLOTANTE DE AVATARES / PARTICIPANTES (ESTILO OOHCAM) -->
-      <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800/90 relative overflow-hidden min-h-[420px] lg:min-h-[560px] flex items-center justify-center p-6 shadow-2xl">
+      <!-- IZQUIERDA: PREVIEW DE CÁMARA & MODO MÁSCARA -->
+      <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800/90 relative overflow-hidden min-h-[420px] lg:min-h-[560px] flex flex-col justify-between p-6 shadow-2xl">
         
-        <!-- Partículas y Destellos de Fondo -->
-        <div class="absolute inset-0 constellation-grid pointer-events-none opacity-40"></div>
-        <div class="star star-1">✨</div>
-        <div class="star star-2">✨</div>
-        <div class="star star-3">✨</div>
-        <div class="star star-4">✨</div>
-        <div class="star star-5">✨</div>
-
-        <!-- Avatares Flotantes Orbitares -->
-        <div class="relative w-full h-full max-w-lg max-h-[500px] flex items-center justify-center">
+        <!-- Video Preview Local -->
+        <div class="relative w-full h-full flex-1 rounded-2xl overflow-hidden bg-dark-950 flex items-center justify-center">
+          <video id="previewVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
           
-          <!-- Avatar Central Destacado con Glow Dorado -->
-          <div class="absolute z-20 animate-pulse-glow">
-            <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl p-1 bg-gradient-to-tr from-amber-400 via-orange-500 to-amber-300 shadow-2xl shadow-amber-500/40">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" alt="Match" class="w-full h-full object-cover rounded-[22px]">
-            </div>
+          <div id="previewFallback" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs gap-2 hidden">
+            <i class="fa-solid fa-video-slash text-2xl text-slate-600"></i>
+            <span>Cámara no activada</span>
           </div>
 
-          <!-- Avatar Superior Izquierda -->
-          <div class="absolute -top-2 left-6 sm:left-12 floating-item-1">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-90">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
-            </div>
-          </div>
-
-          <!-- Avatar Superior Derecha -->
-          <div class="absolute top-4 right-6 sm:right-12 floating-item-2">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-90">
-              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
-            </div>
-          </div>
-
-          <!-- Avatar Centro Izquierda -->
-          <div class="absolute left-0 sm:left-4 top-1/2 -translate-y-1/2 floating-item-3">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-80">
-              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
-            </div>
-          </div>
-
-          <!-- Avatar Centro Derecha -->
-          <div class="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 floating-item-1">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-80">
-              <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
-            </div>
-          </div>
-
-          <!-- Avatar Inferior Izquierda -->
-          <div class="absolute -bottom-2 left-12 sm:left-20 floating-item-2">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-85">
-              <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
-            </div>
-          </div>
-
-          <!-- Avatar Inferior Derecha -->
-          <div class="absolute -bottom-2 right-12 sm:right-20 floating-item-3">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl opacity-85">
-              <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80" alt="Match" class="w-full h-full object-cover">
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Indicador flotante en esquina izquierda -->
-        <div class="absolute top-4 left-4 bg-dark-950/80 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-slate-300 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span id="lobbyActiveRoomTitle">Sala 1 · Match Activo</span>
-        </div>
-      </div>
-
-      <!-- DERECHA: PANEL "READY TO MATCH?" CON BOTÓN DORADO (ESTILO OOHCAM LIMPIO) -->
-      <div class="w-full lg:w-[480px] bg-dark-900 rounded-3xl border border-dark-800/90 p-6 sm:p-10 flex flex-col justify-center gap-8 shadow-2xl relative">
-        
-        <!-- Cabecera del Panel -->
-        <div class="flex flex-col items-center text-center space-y-3">
-          <div class="text-amber-400 text-2xl animate-pulse">✨</div>
-          <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Ready to <span class="text-amber-400">match?</span>
-          </h2>
-          <p class="text-xs text-slate-400 max-w-xs">
-            Conexión instantánea de video 1 a 1 de alta calidad y 100% anónima.
-          </p>
-        </div>
-
-        <!-- Estado de la Sala y Botón Principal "Start Matching" -->
-        <div class="space-y-4">
-          
-          <!-- Badge de Ocupación de la Sala Activa -->
-          <div class="flex items-center justify-between p-4 rounded-2xl bg-dark-950 border border-dark-800">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-black text-sm">
-                1v1
-              </div>
-              <div>
-                <div class="text-sm font-bold text-white" id="selectedRoomLabel">Sala 1</div>
-                <div class="text-xs text-slate-400">Videochat privado en vivo</div>
-              </div>
-            </div>
-            <span id="selectedRoomBadge" class="text-xs px-3 py-1.5 rounded-full font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              0 / 2 (Libre)
+          <!-- Badges Superiores en Preview -->
+          <div class="absolute top-4 left-4 flex items-center gap-2">
+            <span class="bg-dark-950/80 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-slate-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Tu Cámara</span>
+            </span>
+            <span id="previewMaskBadge" class="hidden bg-purple-500/20 backdrop-blur px-3 py-1.5 rounded-full border border-purple-500/40 text-xs font-bold text-purple-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-mask"></i>
+              <span>Máscara Activa</span>
             </span>
           </div>
 
-          <!-- BOTÓN DORADO GIGANTE OOHCAM (START MATCHING) -->
-          <button id="btnStartMatching" onclick="joinActiveLobbyRoom()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-dark-950 font-black text-base tracking-wide shadow-2xl shadow-amber-500/40 hover:shadow-amber-500/60 hover:scale-[1.02] transition transform duration-150 flex items-center justify-center gap-2 cursor-pointer">
-            <span>Start Matching</span>
-          </button>
+          <!-- Contador en vivo sobre el preview -->
+          <div class="absolute top-4 right-4 bg-dark-950/80 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-amber-400 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            <span id="liveOnlineStats">4,210 en línea ahora</span>
+          </div>
+
+          <!-- Controles de Prueba en Preview (Abajo) -->
+          <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 bg-dark-950/80 backdrop-blur-md p-2.5 rounded-2xl border border-white/10">
+            <div class="flex items-center gap-2">
+              <button id="btnTogglePreviewMic" class="w-10 h-10 rounded-xl bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-700">
+                <i class="fa-solid fa-microphone text-sm"></i>
+              </button>
+              <button id="btnTogglePreviewCam" class="w-10 h-10 rounded-xl bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-700">
+                <i class="fa-solid fa-video text-sm"></i>
+              </button>
+            </div>
+
+            <!-- Botón Modo Máscara (Desenfoque) -->
+            <button id="btnTogglePreviewBlur" onclick="togglePrivacyBlur()" class="px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-2 transition">
+              <i class="fa-solid fa-mask text-purple-400"></i>
+              <span id="previewBlurLabel">Activar Máscara (Blur)</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Footer del Panel -->
-        <div class="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5 pt-4 border-t border-dark-800/80">
-          <i class="fa-solid fa-shield-halved text-amber-400/80"></i>
-          <span>Be kind. No private info. Keep it fun. (+18)</span>
+      </div>
+
+      <!-- DERECHA: PANEL DE EMPAREJAMIENTO +18 (ESTILO OMEGLE ADULTO) -->
+      <div class="w-full lg:w-[480px] bg-dark-900 rounded-3xl border border-dark-800/90 p-6 sm:p-8 flex flex-col justify-between gap-6 shadow-2xl relative">
+        
+        <!-- Cabecera del Panel -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black uppercase tracking-wider">
+              <i class="fa-solid fa-fire"></i> Videochat Erótico 1v1
+            </span>
+            <span class="text-xs font-mono text-slate-400">Match instantáneo</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            ¿Listo para tu <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400">próximo match?</span>
+          </h2>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Salas 1 a 1 efímeras y cifradas. Conecta por cámara al instante, pasa a la siguiente persona con la tecla <kbd class="px-1.5 py-0.5 rounded bg-dark-800 border border-dark-700 text-slate-300 font-mono text-[10px]">ESC</kbd> y mantén tu anonimato.
+          </p>
+        </div>
+
+        <!-- FILTROS ERÓTICOS / TAGS (+18) -->
+        <div class="space-y-3" id="panelAutoMatchControls">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-300">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-tags text-amber-400"></i> Elige tu categoría erótica:</span>
+            <span id="selectedTagBadge" class="text-amber-400 text-[11px] font-black uppercase">#General</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 text-xs font-bold">
+            <button type="button" onclick="selectInterestTag('general')" data-tag="general" class="tag-selector p-3 rounded-2xl border border-amber-500 bg-amber-500/20 text-amber-300 text-left flex items-center gap-2.5 transition">
+              <span class="text-base">🔥</span>
+              <div>
+                <div class="font-black">Todo +18</div>
+                <div class="text-[10px] opacity-75 font-normal">Sin filtros (Rápido)</div>
+              </div>
+            </button>
+            <button type="button" onclick="selectInterestTag('parejas')" data-tag="parejas" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition">
+              <span class="text-base">💋</span>
+              <div>
+                <div class="font-black">Parejas</div>
+                <div class="text-[10px] opacity-75 font-normal">Tríos y parejas</div>
+              </div>
+            </button>
+            <button type="button" onclick="selectInterestTag('solo')" data-tag="solo" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition">
+              <span class="text-base">😈</span>
+              <div>
+                <div class="font-black">Show Solo</div>
+                <div class="text-[10px] opacity-75 font-normal">Exhibición 1v1</div>
+              </div>
+            </button>
+            <button type="button" onclick="selectInterestTag('fetish')" data-tag="fetish" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition">
+              <span class="text-base">⛓️</span>
+              <div>
+                <div class="font-black">Kink & Fetish</div>
+                <div class="text-[10px] opacity-75 font-normal">Fetiches privados</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- SELECTOR ALTERNATIVO DE SUITES FIJAS (OCULTO POR DEFECTO) -->
+        <div id="panelSuitesControls" class="hidden space-y-3">
+          <div class="text-xs font-bold text-slate-300 flex items-center justify-between">
+            <span>Suites Privadas Disponibles:</span>
+            <span class="text-xs text-amber-400">Capacidad 2 pers.</span>
+          </div>
+          <div class="space-y-2">
+            <button onclick="joinSelectedFixedRoom('suite-1')" class="w-full p-3 rounded-2xl bg-dark-950 border border-dark-700 hover:border-amber-500/50 flex items-center justify-between transition">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">S1</span>
+                <span class="text-sm font-bold text-white">Suite 1 · Parejas</span>
+              </div>
+              <span id="badgeSuite1" class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">Libre (0/2)</span>
+            </button>
+            <button onclick="joinSelectedFixedRoom('suite-2')" class="w-full p-3 rounded-2xl bg-dark-950 border border-dark-700 hover:border-amber-500/50 flex items-center justify-between transition">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs">S2</span>
+                <span class="text-sm font-bold text-white">Suite 2 · Show Privado</span>
+              </div>
+              <span id="badgeSuite2" class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">Libre (0/2)</span>
+            </button>
+            <button onclick="joinSelectedFixedRoom('suite-3')" class="w-full p-3 rounded-2xl bg-dark-950 border border-dark-700 hover:border-amber-500/50 flex items-center justify-between transition">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-xs">S3</span>
+                <span class="text-sm font-bold text-white">Suite 3 · Fetish & Kink</span>
+              </div>
+              <span id="badgeSuite3" class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">Libre (0/2)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- BOTÓN PRINCIPAL START MATCHING -->
+        <div class="space-y-3 pt-2">
+          <button id="btnStartAutoMatch" onclick="startOmegleMatching()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-300 hover:to-rose-400 text-dark-950 font-black text-base tracking-wide shadow-2xl glow-erotic hover:scale-[1.02] transition transform duration-150 flex items-center justify-center gap-2.5 cursor-pointer">
+            <i class="fa-solid fa-play text-sm"></i>
+            <span>START MATCHING (+18)</span>
+          </button>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-amber-400"></i> IP Oculta (TURN Relay)</span>
+            <span>Atajo: Presiona <strong>ESC</strong> para siguiente</span>
+          </div>
         </div>
 
       </div>
@@ -443,22 +478,23 @@
     </main>
   </div>
 
-  <!-- ==================== 4. INTERFAZ PROFESIONAL DE VIDEOCHAT (ESTILO MEETGLE) ==================== -->
+  <!-- ==================== 4. INTERFAZ PROFESIONAL DE VIDEOCHAT CONTINUO (OMEGLE DUAL SCREEN) ==================== -->
   <div id="roomScreen" class="fixed inset-0 z-40 bg-dark-950 hidden flex flex-col justify-between overflow-hidden select-none">
     
     <!-- Header Superior Flotante Minimalista -->
-    <header class="w-full px-4 sm:px-6 py-3 flex items-center justify-between z-30 bg-gradient-to-b from-dark-950/90 to-transparent">
-      <!-- Logo y Sala -->
+    <header class="w-full px-4 sm:px-6 py-3 flex items-center justify-between z-30 bg-gradient-to-b from-dark-950/95 to-transparent">
+      <!-- Logo y Etiqueta de la Sala -->
       <div class="flex items-center gap-3">
         <span class="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
           MATCH<span class="text-amber-400">GLE</span>
         </span>
-        <span id="currentRoomName" class="text-xs px-2.5 py-1 rounded-full bg-dark-850 border border-dark-700 text-slate-300 font-bold">
-          Sala 1
+        <span id="currentRoomName" class="text-xs px-3 py-1 rounded-full bg-dark-850 border border-dark-700 text-amber-300 font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-fire text-amber-400 text-[10px]"></i>
+          <span id="roomCategoryLabel">#General</span>
         </span>
         <!-- Indicador Discreto de Seguridad -->
-        <span id="moderatorNotice" title="Supervisión comunitaria activa" class="hidden items-center gap-1 px-2 py-0.5 rounded-full bg-dark-800/80 border border-dark-700 text-[10px] text-slate-400">
+        <span id="moderatorNotice" title="Supervisión comunitaria activa" class="hidden items-center gap-1 px-2.5 py-1 rounded-full bg-dark-800/80 border border-dark-700 text-[10px] text-slate-400">
           <i class="fa-solid fa-shield-halved text-[9px] text-amber-400"></i>
           <span>Seguridad</span>
         </span>
@@ -470,7 +506,7 @@
           00:00
         </div>
         
-        <button id="btnLeaveRoom" class="w-8 h-8 rounded-full bg-dark-800 hover:bg-red-600/80 text-slate-300 hover:text-white transition flex items-center justify-center text-xs border border-dark-700">
+        <button onclick="stopMatchingAndLeave()" title="Salir del chat" class="w-8 h-8 rounded-full bg-dark-800 hover:bg-red-600/80 text-slate-300 hover:text-white transition flex items-center justify-center text-xs border border-dark-700">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -492,20 +528,25 @@
             <span>Tú (Cámara local)</span>
           </div>
 
+          <!-- Indicador de Máscara en Vivo -->
+          <span id="localMaskIndicator" class="hidden absolute top-4 left-36 bg-purple-500/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-purple-500/40 text-[10px] font-bold text-purple-300">
+            Máscara ON
+          </span>
+
           <!-- Botón de voltear cámara (móvil) -->
           <button id="btnSwitchCam" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-dark-950/70 backdrop-blur-md border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition sm:hidden">
             <i class="fa-solid fa-camera-rotate text-xs"></i>
           </button>
         </div>
 
-        <!-- PANTALLA DERECHA: PARTICIPANTE REMOTO -->
+        <!-- PANTALLA DERECHA: PARTICIPANTE REMOTO / RADAR OMEGLE -->
         <div class="flex-1 bg-dark-900 rounded-3xl border border-dark-800/90 relative overflow-hidden shadow-2xl flex items-center justify-center group">
           <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
           
           <!-- Badge Superior Derecho -->
           <div class="absolute top-4 left-4 bg-dark-950/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-white flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span>Desconocido (1v1)</span>
+            <span id="remotePeerLabel">Desconocido (1v1)</span>
           </div>
 
           <!-- Botón de Reporte (Bandera) -->
@@ -513,13 +554,45 @@
             <i class="fa-solid fa-flag text-xs"></i>
           </button>
 
-          <!-- Placeholder de Espera cuando la sala no tiene match todavía -->
+          <!-- RADAR OMEGLE DE BÚSQUEDA AUTOMÁTICA -->
           <div id="waitingPlaceholder" class="absolute inset-0 bg-dark-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
-            <div class="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mb-4 animate-bounce">
-              <i class="fa-solid fa-user-plus"></i>
+            <div class="relative w-36 h-36 flex items-center justify-center mb-6">
+              <div class="absolute inset-0 rounded-full border border-amber-500/40 radar-ring-1"></div>
+              <div class="absolute inset-0 rounded-full border border-orange-500/30 radar-ring-2"></div>
+              <div class="absolute inset-0 rounded-full border border-rose-500/20 radar-ring-3"></div>
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-500 text-dark-950 flex items-center justify-center text-2xl shadow-xl shadow-amber-500/40 animate-pulse">
+                <i class="fa-solid fa-fire"></i>
+              </div>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">Buscando a tu match...</h3>
-            <p class="text-xs text-slate-400 max-w-sm">Comparte el enlace o espera en esta sala. Cuando otra persona entre, se conectará automáticamente.</p>
+
+            <h3 class="text-2xl font-black text-white mb-2" id="searchRadarTitle">Buscando pareja erótica...</h3>
+            <p class="text-xs text-slate-400 max-w-sm mb-6" id="searchRadarSubtitle">Conectando 1 a 1 en tiempo real con personas de todo el mundo.</p>
+
+            <div class="flex items-center gap-3">
+              <button onclick="skipToNextMatch()" class="px-6 py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-dark-600 text-xs font-bold text-slate-200 transition">
+                <i class="fa-solid fa-forward-step mr-1.5"></i> Saltar
+              </button>
+              <button onclick="stopMatchingAndLeave()" class="px-6 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-xs font-bold text-red-300 transition">
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <!-- OVERLAY: PAREJA DESCONECTADA / SALTÓ (NEXT OMEGLE) -->
+          <div id="partnerSkippedOverlay" class="hidden absolute inset-0 bg-dark-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl mb-3">
+              <i class="fa-solid fa-user-xmark"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white mb-1" id="partnerSkippedTitle">Tu pareja ha pasado</h4>
+            <p class="text-xs text-slate-400 mb-5">Buscando automáticamente tu siguiente pareja en 3s...</p>
+            <div class="flex items-center gap-3">
+              <button onclick="skipToNextMatch()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-dark-950 font-black text-xs transition hover:scale-105">
+                Buscar Ahora (Espacio)
+              </button>
+              <button onclick="stopMatchingAndLeave()" class="px-5 py-2.5 rounded-xl bg-dark-800 text-slate-400 hover:text-white text-xs font-bold">
+                Pausar
+              </button>
+            </div>
           </div>
         </div>
 
@@ -554,38 +627,33 @@
     <div class="fixed bottom-4 left-0 right-0 z-30 px-4 flex items-center justify-center pointer-events-none">
       <div class="flex items-center gap-3 sm:gap-4 pointer-events-auto">
         
-        <!-- Pill de Modo / Salas (Izquierda) -->
-        <div class="hidden lg:flex items-center gap-3 bg-dark-900/90 backdrop-blur-xl border border-dark-700 px-4 py-2 rounded-full shadow-2xl">
-          <div class="flex -space-x-2">
-            <span class="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-[10px] text-dark-950 font-black">1</span>
-            <span class="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-[10px] text-dark-950 font-black">2</span>
-            <span class="w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center text-[10px] text-dark-950 font-black">3</span>
-          </div>
-          <span class="text-xs font-bold text-white">Salas 1 a 1</span>
-          <button onclick="leaveCurrentRoom()" class="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold hover:bg-amber-500 hover:text-dark-950 transition">
-            Cambiar
-          </button>
-        </div>
-
         <!-- Barra Central de Botones Circulares -->
-        <div class="bg-dark-900/90 backdrop-blur-xl border border-dark-700 px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 sm:gap-3">
+        <div class="bg-dark-900/90 backdrop-blur-xl border border-dark-700 px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 sm:gap-3">
           
-          <button id="btnToggleMic" title="Silenciar / Activar micrófono" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600">
+          <!-- BOTÓN PRINCIPAL PRÓXIMO / NEXT (ESTILO OMEGLE DESTACADO) -->
+          <button onclick="skipToNextMatch()" title="Pasar a la siguiente pareja (Tecla ESC o Espacio)" class="h-11 px-6 rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-300 text-dark-950 font-black text-xs sm:text-sm tracking-wide flex items-center gap-2 shadow-xl hover:scale-105 transition transform duration-150 cursor-pointer">
+            <i class="fa-solid fa-forward-step text-xs"></i>
+            <span>Próximo <kbd class="hidden sm:inline px-1 py-0.5 rounded bg-dark-950/40 text-[10px] font-mono">ESC</kbd></span>
+          </button>
+
+          <!-- Máscara de Privacidad / Blur -->
+          <button id="btnToggleBlur" onclick="togglePrivacyBlur()" title="Activar / Desactivar Máscara Blur (Tecla B)" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600">
+            <i class="fa-solid fa-mask text-sm text-purple-400"></i>
+          </button>
+
+          <!-- Micrófono (M) -->
+          <button id="btnToggleMic" title="Silenciar / Activar micrófono (Tecla M)" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600">
             <i class="fa-solid fa-microphone text-sm"></i>
           </button>
 
-          <button id="btnToggleCam" title="Apagar / Encender cámara" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600">
+          <!-- Cámara (V) -->
+          <button id="btnToggleCam" title="Apagar / Encender cámara (Tecla V)" class="w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600">
             <i class="fa-solid fa-video text-sm"></i>
           </button>
 
-          <button onclick="leaveCurrentRoom()" title="Finalizar llamada" class="w-11 h-11 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition shadow-lg shadow-red-600/30">
+          <!-- Detener / Salir -->
+          <button onclick="stopMatchingAndLeave()" title="Detener y volver al lobby" class="w-11 h-11 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center transition shadow-lg shadow-red-600/30">
             <i class="fa-solid fa-stop text-sm"></i>
-          </button>
-
-          <!-- BOTÓN PRINCIPAL PRÓXIMO -->
-          <button onclick="nextRoomQuick()" class="h-11 px-6 rounded-full bg-white hover:bg-slate-200 text-dark-950 font-black text-xs sm:text-sm tracking-wide flex items-center gap-2 shadow-xl hover:scale-105 transition transform duration-150">
-            <i class="fa-solid fa-forward-step text-xs"></i>
-            <span>Próximo</span>
           </button>
 
           <!-- Chat Toggle -->

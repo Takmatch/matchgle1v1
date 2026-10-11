@@ -1,22 +1,11 @@
 const socket = io();
 
-socket.on('connect', () => {
-  console.log('🟢 Conectado al servidor WebSocket:', socket.id);
-  // Si se reconectó estando dentro de una sala, re-sincronizar unión
-  if (currentRoomId) {
-    socket.emit('join-room', { roomId: currentRoomId, isAdmin: isAdminMode }, (response) => {
-      console.log('Reconexión a sala sincronizada:', response);
-    });
-  }
-});
-
 // Configuración de Servidores STUN y TURN (OpenRelay Gratuito)
-// Esta configuración garantiza conectividad y permite ocultar la IP mediante TURN Relay
+// Esta configuración garantiza conectividad P2P y oculta la IP real de los usuarios
 const rtcConfig = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    // TURN Relay público gratuito para enrutamiento anónimo
     {
       urls: 'turn:openrelay.metered.ca:80',
       username: 'openrelay',
@@ -30,43 +19,73 @@ const rtcConfig = {
   ]
 };
 
+// ==================== VARIABLES DE ESTADO ====================
 let localStream = null;
 let currentRoomId = null;
+let currentPartnerId = null;
 let isAdminMode = false;
 let isAudioMuted = false;
 let isVideoMuted = false;
-let usingFacingMode = 'user'; // 'user' o 'environment'
+let isPrivacyBlurActive = false;
+let usingFacingMode = 'user';
 let peerConnections = {}; // { [peerId]: RTCPeerConnection }
+let iceCandidateQueues = {}; // { [peerId]: RTCIceCandidateInit[] }
+
+let selectedTag = 'general';
+let currentLobbyMode = 'auto'; // 'auto' | 'suites'
+let autoNextTimer = null;
 let callTimerInterval = null;
 let callSeconds = 0;
 
-// Elementos DOM
+// ==================== ELEMENTOS DEL DOM ====================
 const landingScreen = document.getElementById('landingScreen');
 const ageGateModal = document.getElementById('ageGateModal');
 const checkAge = document.getElementById('checkAge');
 const checkRecording = document.getElementById('checkRecording');
 const checkModeration = document.getElementById('checkModeration');
 const btnAcceptAge = document.getElementById('btnAcceptAge');
-const btnOpenAdminFromFooter = document.getElementById('btnOpenAdminFromFooter');
 const onlineCountText = document.getElementById('onlineCountText');
 
 const lobbyScreen = document.getElementById('lobbyScreen');
 const previewVideo = document.getElementById('previewVideo');
 const previewFallback = document.getElementById('previewFallback');
-const camStatusBadge = document.getElementById('camStatusBadge');
+const previewMaskBadge = document.getElementById('previewMaskBadge');
+const previewBlurLabel = document.getElementById('previewBlurLabel');
+const liveOnlineStats = document.getElementById('liveOnlineStats');
 const btnTogglePreviewMic = document.getElementById('btnTogglePreviewMic');
 const btnTogglePreviewCam = document.getElementById('btnTogglePreviewCam');
+const tabModeAuto = document.getElementById('tabModeAuto');
+const tabModeSuites = document.getElementById('tabModeSuites');
+const panelAutoMatchControls = document.getElementById('panelAutoMatchControls');
+const panelSuitesControls = document.getElementById('panelSuitesControls');
+const selectedTagBadge = document.getElementById('selectedTagBadge');
+const btnStartAutoMatch = document.getElementById('btnStartAutoMatch');
+
+const badgeSuite1 = document.getElementById('badgeSuite1');
+const badgeSuite2 = document.getElementById('badgeSuite2');
+const badgeSuite3 = document.getElementById('badgeSuite3');
 
 const roomScreen = document.getElementById('roomScreen');
 const currentRoomName = document.getElementById('currentRoomName');
+const roomCategoryLabel = document.getElementById('roomCategoryLabel');
 const moderatorNotice = document.getElementById('moderatorNotice');
 const callTimer = document.getElementById('callTimer');
-const btnLeaveRoom = document.getElementById('btnLeaveRoom');
 
 const normalDualCanvas = document.getElementById('normalDualCanvas');
-const remoteVideo = document.getElementById('remoteVideo');
 const localVideo = document.getElementById('localVideo');
+const remoteVideo = document.getElementById('remoteVideo');
+const localMaskIndicator = document.getElementById('localMaskIndicator');
+const remotePeerLabel = document.getElementById('remotePeerLabel');
 const waitingPlaceholder = document.getElementById('waitingPlaceholder');
+const searchRadarTitle = document.getElementById('searchRadarTitle');
+const searchRadarSubtitle = document.getElementById('searchRadarSubtitle');
+const partnerSkippedOverlay = document.getElementById('partnerSkippedOverlay');
+const partnerSkippedTitle = document.getElementById('partnerSkippedTitle');
+
+const btnToggleBlur = document.getElementById('btnToggleBlur');
+const btnToggleMic = document.getElementById('btnToggleMic');
+const btnToggleCam = document.getElementById('btnToggleCam');
+const btnSwitchCam = document.getElementById('btnSwitchCam');
 
 const adminVideoArea = document.getElementById('adminVideoArea');
 const adminVideo1 = document.getElementById('adminVideo1');
@@ -74,6 +93,12 @@ const adminVideo2 = document.getElementById('adminVideo2');
 const adminFallback1 = document.getElementById('adminFallback1');
 const adminFallback2 = document.getElementById('adminFallback2');
 const adminBadge = document.getElementById('adminBadge');
+const adminLoginModal = document.getElementById('adminLoginModal');
+const btnOpenAdminModal = document.getElementById('btnOpenAdminModal');
+const btnCloseAdminModal = document.getElementById('btnCloseAdminModal');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminPinInput = document.getElementById('adminPinInput');
+const adminErrorMsg = document.getElementById('adminErrorMsg');
 
 const chatDrawer = document.getElementById('chatDrawer');
 const btnToggleChatDrawer = document.getElementById('btnToggleChatDrawer');
@@ -83,99 +108,98 @@ const chatMessages = document.getElementById('chatMessages');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 
-const btnToggleMic = document.getElementById('btnToggleMic');
-const btnToggleCam = document.getElementById('btnToggleCam');
-const btnSwitchCam = document.getElementById('btnSwitchCam');
-
-const adminLoginModal = document.getElementById('adminLoginModal');
-const btnOpenAdminModal = document.getElementById('btnOpenAdminModal');
-const btnCloseAdminModal = document.getElementById('btnCloseAdminModal');
-const adminLoginForm = document.getElementById('adminLoginForm');
-const adminPinInput = document.getElementById('adminPinInput');
-const adminErrorMsg = document.getElementById('adminErrorMsg');
-
-// ==================== 1. NAVEGACIÓN Y LANDING PAGE ====================
+// ==================== 1. NAVEGACIÓN Y AGE GATE (+18) ====================
 
 window.goToLobby = function () {
   if (sessionStorage.getItem('matchgle_age_accepted') !== 'true') {
-    ageGateModal.classList.remove('hidden');
-    ageGateModal.classList.add('flex');
+    if (ageGateModal) {
+      ageGateModal.classList.remove('hidden');
+      ageGateModal.classList.add('flex');
+    }
   } else {
     showLobby();
   }
 };
 
 window.goToLanding = function () {
-  lobbyScreen.classList.add('hidden');
-  landingScreen.classList.remove('hidden');
+  stopMatchingAndLeave();
+  if (lobbyScreen) lobbyScreen.classList.add('hidden');
+  if (landingScreen) landingScreen.classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.closeAgeGateModal = function () {
-  ageGateModal.classList.add('hidden');
-  ageGateModal.classList.remove('flex');
+  if (ageGateModal) {
+    ageGateModal.classList.add('hidden');
+    ageGateModal.classList.remove('flex');
+  }
 };
 
 window.openTermsModal = function () {
-  ageGateModal.classList.remove('hidden');
-  ageGateModal.classList.add('flex');
+  if (ageGateModal) {
+    ageGateModal.classList.remove('hidden');
+    ageGateModal.classList.add('flex');
+  }
 };
 
 function showLobby() {
-  landingScreen.classList.add('hidden');
-  lobbyScreen.classList.remove('hidden');
+  if (landingScreen) landingScreen.classList.add('hidden');
+  if (roomScreen) {
+    roomScreen.classList.add('hidden');
+    roomScreen.classList.remove('flex');
+  }
+  if (lobbyScreen) lobbyScreen.classList.remove('hidden');
   initMediaPreview();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Contador dinámico en vivo en la landing
+function checkAgeGateCheckboxes() {
+  if (btnAcceptAge && checkAge && checkRecording && checkModeration) {
+    btnAcceptAge.disabled = !(checkAge.checked && checkRecording.checked && checkModeration.checked);
+  }
+}
+
+if (checkAge) checkAge.addEventListener('change', checkAgeGateCheckboxes);
+if (checkRecording) checkRecording.addEventListener('change', checkAgeGateCheckboxes);
+if (checkModeration) checkModeration.addEventListener('change', checkAgeGateCheckboxes);
+
+if (btnAcceptAge) {
+  btnAcceptAge.addEventListener('click', () => {
+    sessionStorage.setItem('matchgle_age_accepted', 'true');
+    closeAgeGateModal();
+    showLobby();
+  });
+}
+
+// Contador dinámico simulado en Landing & Lobby
 if (onlineCountText) {
   let baseCount = 3842;
   setInterval(() => {
     const delta = Math.floor(Math.random() * 7) - 3;
     baseCount = Math.max(3700, baseCount + delta);
     onlineCountText.textContent = `${baseCount.toLocaleString()} en línea ahora`;
+    if (liveOnlineStats) {
+      liveOnlineStats.textContent = `${baseCount.toLocaleString()} en línea ahora`;
+    }
   }, 4000);
 }
 
-// Acceso Secreto de Administrador: Atajo de teclado (Ctrl + Shift + A) o doble clic en el logo
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
-    e.preventDefault();
-    adminLoginModal.classList.remove('hidden');
-    adminLoginModal.classList.add('flex');
-    adminPinInput.value = '';
-    adminErrorMsg.classList.add('hidden');
-    adminPinInput.focus();
-  }
-});
-
-// ==================== 2. GESTIÓN DEL MODAL +18 ====================
-
-function checkAgeGateCheckboxes() {
-  btnAcceptAge.disabled = !(checkAge.checked && checkRecording.checked && checkModeration.checked);
-}
-
-checkAge.addEventListener('change', checkAgeGateCheckboxes);
-checkRecording.addEventListener('change', checkAgeGateCheckboxes);
-checkModeration.addEventListener('change', checkAgeGateCheckboxes);
-
-btnAcceptAge.addEventListener('click', () => {
-  sessionStorage.setItem('matchgle_age_accepted', 'true');
-  ageGateModal.classList.add('hidden');
-  ageGateModal.classList.remove('flex');
-  showLobby();
-});
-
-// ==================== 2. ACCESO A CÁMARA Y MICRÓFONO ====================
+// ==================== 2. ACCESO A DISPOSITIVOS & MÁSCARA (BLUR) ====================
 
 async function initMediaPreview() {
+  if (localStream) return localStream;
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: usingFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: {
+        facingMode: usingFacingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
       audio: true
     });
     localStream = stream;
+
     if (previewVideo) {
       previewVideo.srcObject = stream;
       previewVideo.play().catch(() => {});
@@ -184,31 +208,54 @@ async function initMediaPreview() {
       localVideo.srcObject = stream;
       localVideo.play().catch(() => {});
     }
-    if (camStatusBadge) {
-      camStatusBadge.textContent = 'Activa';
-      camStatusBadge.className = 'text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400';
-    }
-    if (previewFallback) {
-      previewFallback.classList.add('hidden');
-    }
+    if (previewFallback) previewFallback.classList.add('hidden');
+
+    applyBlurVisuals();
     return stream;
   } catch (err) {
-    console.warn('No se pudo acceder a la cámara o micrófono:', err);
-    if (camStatusBadge) {
-      camStatusBadge.textContent = 'Sin acceso';
-      camStatusBadge.className = 'text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400';
-    }
-    if (previewFallback) {
-      previewFallback.classList.remove('hidden');
-    }
+    console.warn('Cámara o micrófono no disponibles:', err);
+    if (previewFallback) previewFallback.classList.remove('hidden');
     return null;
   }
 }
 
-// Controles de Micrófono y Cámara en Preview
+// Máscara de Privacidad (Efecto Blur Profesional)
+window.togglePrivacyBlur = function () {
+  isPrivacyBlurActive = !isPrivacyBlurActive;
+  applyBlurVisuals();
+};
+
+function applyBlurVisuals() {
+  const elements = [previewVideo, localVideo].filter(Boolean);
+  elements.forEach(el => {
+    if (isPrivacyBlurActive) {
+      el.classList.add('camera-blurred');
+    } else {
+      el.classList.remove('camera-blurred');
+    }
+  });
+
+  if (previewMaskBadge) {
+    previewMaskBadge.classList.toggle('hidden', !isPrivacyBlurActive);
+  }
+  if (localMaskIndicator) {
+    localMaskIndicator.classList.toggle('hidden', !isPrivacyBlurActive);
+  }
+  if (previewBlurLabel) {
+    previewBlurLabel.textContent = isPrivacyBlurActive ? 'Desactivar Máscara' : 'Activar Máscara (Blur)';
+  }
+  if (btnToggleBlur) {
+    if (isPrivacyBlurActive) {
+      btnToggleBlur.className = 'w-11 h-11 rounded-full bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition border border-purple-400 shadow-lg shadow-purple-500/30';
+    } else {
+      btnToggleBlur.className = 'w-11 h-11 rounded-full bg-dark-800 hover:bg-dark-700 text-slate-200 flex items-center justify-center transition border border-dark-600';
+    }
+  }
+}
+
+// Alternar Audio y Video
 if (btnTogglePreviewMic) btnTogglePreviewMic.addEventListener('click', toggleAudio);
 if (btnTogglePreviewCam) btnTogglePreviewCam.addEventListener('click', toggleVideo);
-
 if (btnToggleMic) btnToggleMic.addEventListener('click', toggleAudio);
 if (btnToggleCam) btnToggleCam.addEventListener('click', toggleVideo);
 
@@ -218,9 +265,9 @@ function toggleAudio() {
   if (audioTrack) {
     audioTrack.enabled = !audioTrack.enabled;
     isAudioMuted = !audioTrack.enabled;
-    const iconClass = isAudioMuted ? 'fa-microphone-slash text-red-400' : 'fa-microphone text-slate-200';
-    if (btnTogglePreviewMic) btnTogglePreviewMic.innerHTML = `<i class="fa-solid ${iconClass} text-sm"></i>`;
-    if (btnToggleMic) btnToggleMic.innerHTML = `<i class="fa-solid ${iconClass} text-base"></i>`;
+    const icon = isAudioMuted ? 'fa-microphone-slash text-red-400' : 'fa-microphone text-slate-200';
+    if (btnTogglePreviewMic) btnTogglePreviewMic.innerHTML = `<i class="fa-solid ${icon} text-sm"></i>`;
+    if (btnToggleMic) btnToggleMic.innerHTML = `<i class="fa-solid ${icon} text-sm"></i>`;
   }
 }
 
@@ -230,21 +277,19 @@ function toggleVideo() {
   if (videoTrack) {
     videoTrack.enabled = !videoTrack.enabled;
     isVideoMuted = !videoTrack.enabled;
-    const iconClass = isVideoMuted ? 'fa-video-slash text-red-400' : 'fa-video text-slate-200';
-    if (btnTogglePreviewCam) btnTogglePreviewCam.innerHTML = `<i class="fa-solid ${iconClass} text-sm"></i>`;
-    if (btnToggleCam) btnToggleCam.innerHTML = `<i class="fa-solid ${iconClass} text-base"></i>`;
+    const icon = isVideoMuted ? 'fa-video-slash text-red-400' : 'fa-video text-slate-200';
+    if (btnTogglePreviewCam) btnTogglePreviewCam.innerHTML = `<i class="fa-solid ${icon} text-sm"></i>`;
+    if (btnToggleCam) btnToggleCam.innerHTML = `<i class="fa-solid ${icon} text-sm"></i>`;
     if (previewFallback) previewFallback.classList.toggle('hidden', videoTrack.enabled);
   }
 }
 
-// Cambiar entre cámara frontal y trasera (móvil)
+// Alternar entre cámara frontal y trasera en móvil
 if (btnSwitchCam) {
   btnSwitchCam.addEventListener('click', async () => {
     if (!localStream) return;
     usingFacingMode = usingFacingMode === 'user' ? 'environment' : 'user';
-    
-    // Detener pistas de video actuales
-    localStream.getVideoTracks().forEach(track => track.stop());
+    localStream.getVideoTracks().forEach(t => t.stop());
 
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
@@ -252,232 +297,264 @@ if (btnSwitchCam) {
         audio: false
       });
       const newVideoTrack = newStream.getVideoTracks()[0];
-      
-      // Reemplazar pista en localStream
       localStream.removeTrack(localStream.getVideoTracks()[0]);
       localStream.addTrack(newVideoTrack);
-      
+
       if (localVideo) localVideo.srcObject = localStream;
       if (previewVideo) previewVideo.srcObject = localStream;
 
-      // Reemplazar pista en todas las conexiones WebRTC activas
       for (const pc of Object.values(peerConnections)) {
         const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
         if (sender) sender.replaceTrack(newVideoTrack);
       }
     } catch (e) {
-      console.error('Error al cambiar de cámara:', e);
+      console.error('Error al alternar cámara:', e);
     }
   });
 }
 
-// ==================== 3. MODAL Y MODO ADMINISTRADOR ====================
+// ==================== 3. CONFIGURACIÓN DEL LOBBY & SELECTORES ====================
 
-btnOpenAdminModal.addEventListener('click', () => {
-  adminLoginModal.classList.remove('hidden');
-  adminLoginModal.classList.add('flex');
-  adminPinInput.value = '';
-  adminErrorMsg.classList.add('hidden');
-  adminPinInput.focus();
-});
+window.setLobbyMode = function (mode) {
+  currentLobbyMode = mode;
+  if (mode === 'auto') {
+    if (tabModeAuto) {
+      tabModeAuto.className = 'px-3.5 py-1.5 rounded-xl text-xs font-black tracking-wider transition bg-amber-500 text-dark-950 shadow-md flex items-center gap-1.5';
+    }
+    if (tabModeSuites) {
+      tabModeSuites.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white flex items-center gap-1.5';
+    }
+    if (panelAutoMatchControls) panelAutoMatchControls.classList.remove('hidden');
+    if (panelSuitesControls) panelSuitesControls.classList.add('hidden');
+    if (btnStartAutoMatch) btnStartAutoMatch.classList.remove('hidden');
+  } else {
+    if (tabModeAuto) {
+      tabModeAuto.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white flex items-center gap-1.5';
+    }
+    if (tabModeSuites) {
+      tabModeSuites.className = 'px-3.5 py-1.5 rounded-xl text-xs font-black tracking-wider transition bg-amber-500 text-dark-950 shadow-md flex items-center gap-1.5';
+    }
+    if (panelAutoMatchControls) panelAutoMatchControls.classList.add('hidden');
+    if (panelSuitesControls) panelSuitesControls.classList.remove('hidden');
+    if (btnStartAutoMatch) btnStartAutoMatch.classList.add('hidden');
+  }
+};
 
-btnCloseAdminModal.addEventListener('click', () => {
-  adminLoginModal.classList.add('hidden');
-  adminLoginModal.classList.remove('flex');
-});
+window.selectInterestTag = function (tag) {
+  selectedTag = tag;
+  const tagLabels = {
+    general: '#Todo +18',
+    parejas: '#Parejas',
+    solo: '#Show Solo',
+    fetish: '#Fetish & Kink'
+  };
 
-let lastRoomsData = null;
+  if (selectedTagBadge) {
+    selectedTagBadge.textContent = tagLabels[tag] || `#${tag}`;
+  }
+  if (roomCategoryLabel) {
+    roomCategoryLabel.textContent = tagLabels[tag] || `#${tag}`;
+  }
 
-adminLoginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const pin = adminPinInput.value;
-  socket.emit('verify-admin', pin, (res) => {
-    if (res && res.success) {
-      isAdminMode = true;
-      adminLoginModal.classList.add('hidden');
-      adminLoginModal.classList.remove('flex');
-      adminBadge.classList.remove('hidden');
-      adminBadge.classList.add('flex');
-      btnOpenAdminModal.innerHTML = `<i class="fa-solid fa-crown text-amber-400"></i><span>Admin ON</span>`;
-      
-      // Actualizar inmediatamente los botones de las salas para habilitar "Supervisar"
-      if (lastRoomsData) {
-        renderRooms(lastRoomsData);
-      }
+  // Actualizar estilos de los botones de categoría
+  document.querySelectorAll('.tag-selector').forEach(btn => {
+    const btnTag = btn.getAttribute('data-tag');
+    if (btnTag === tag) {
+      btn.className = 'tag-selector p-3 rounded-2xl border border-amber-500 bg-amber-500/20 text-amber-300 text-left flex items-center gap-2.5 transition';
     } else {
-      adminErrorMsg.classList.remove('hidden');
+      btn.className = 'tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition';
     }
   });
-});
-
-// ==================== 4. GESTIÓN DE SALA ACTIVA Y MATCHMAKER OOHCAM ====================
-
-let activeLobbyRoom = 'sala-1';
-
-const lobbyActiveRoomTitle = document.getElementById('lobbyActiveRoomTitle');
-const selectedRoomLabel = document.getElementById('selectedRoomLabel');
-const selectedRoomBadge = document.getElementById('selectedRoomBadge');
-const btnStartMatching = document.getElementById('btnStartMatching');
-
-window.switchActiveLobbyRoom = function (roomId) {
-  activeLobbyRoom = roomId;
-  
-  // Actualizar estilos de las pestañas
-  ['sala-1', 'sala-2', 'sala-3'].forEach(id => {
-    const tab = document.getElementById(`tab-${id}`);
-    if (tab) {
-      if (id === roomId) {
-        tab.className = 'px-3.5 py-1.5 rounded-xl text-xs font-black tracking-wider transition bg-amber-500 text-dark-950 shadow-md';
-      } else {
-        tab.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition text-slate-400 hover:text-white';
-      }
-    }
-  });
-
-  const roomNames = { 'sala-1': 'Sala 1', 'sala-2': 'Sala 2', 'sala-3': 'Sala 3' };
-  const roomName = roomNames[roomId] || 'Sala 1';
-
-  if (lobbyActiveRoomTitle) lobbyActiveRoomTitle.textContent = `${roomName} · Match Activo`;
-  if (selectedRoomLabel) selectedRoomLabel.textContent = roomName;
-
-  if (lastRoomsData) {
-    renderRooms(lastRoomsData);
-  }
 };
 
-window.joinActiveLobbyRoom = function () {
-  joinSelectedRoom(activeLobbyRoom);
-};
+// ==================== 4. MOTOR DE EMPAREJAMIENTO AUTOMÁTICO (OMEGLE) ====================
 
-socket.on('rooms-update', (rooms) => {
-  lastRoomsData = rooms;
-  renderRooms(rooms);
-});
-
-function renderRooms(rooms) {
-  const activeInfo = rooms[activeLobbyRoom];
-  if (activeInfo && selectedRoomBadge && btnStartMatching) {
-    let text = `${activeInfo.userCount} / ${activeInfo.maxUsers}`;
-    let badgeClass = 'text-xs px-2.5 py-1 rounded-full font-bold ';
-
-    if (activeInfo.userCount === 0) {
-      text += ' (Libre)';
-      badgeClass += 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-      btnStartMatching.disabled = false;
-      btnStartMatching.innerHTML = `<span>Start Matching</span>`;
-      btnStartMatching.className = 'w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-dark-950 font-black text-base tracking-wide shadow-2xl shadow-amber-500/40 hover:shadow-amber-500/60 hover:scale-[1.02] transition transform duration-150 flex items-center justify-center gap-2 cursor-pointer';
-    } else if (activeInfo.userCount === 1) {
-      text += ' (Esperando)';
-      badgeClass += 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
-      btnStartMatching.disabled = false;
-      btnStartMatching.innerHTML = `<span>Unirse al Match (1/2)</span>`;
-      btnStartMatching.className = 'w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-300 text-dark-950 font-black text-base tracking-wide shadow-2xl shadow-amber-500/40 hover:shadow-amber-500/60 hover:scale-[1.02] transition transform duration-150 flex items-center justify-center gap-2 cursor-pointer';
-    } else {
-      text += ' (Ocupada)';
-      badgeClass += 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
-      
-      if (isAdminMode) {
-        btnStartMatching.disabled = false;
-        btnStartMatching.innerHTML = `<span>Supervisar ${activeInfo.name}</span>`;
-        btnStartMatching.className = 'w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-dark-950 font-black text-base tracking-wide shadow-2xl shadow-amber-500/40 hover:scale-[1.02] transition transform duration-150 flex items-center justify-center gap-2 cursor-pointer';
-      } else {
-        btnStartMatching.disabled = true;
-        btnStartMatching.innerHTML = `<span>Sala Ocupada (2/2)</span>`;
-        btnStartMatching.className = 'w-full py-4 px-6 rounded-2xl bg-dark-800 text-slate-500 font-bold text-base cursor-not-allowed opacity-50 flex items-center justify-center gap-2';
-      }
-    }
-
-    if (isAdminMode && activeInfo.adminCount > 0) {
-      text += ' 👁️';
-    }
-
-    selectedRoomBadge.textContent = text;
-    selectedRoomBadge.className = badgeClass;
-  }
-}
-
-// ==================== 5. UNIRSE Y SALIR DE UNA SALA ====================
-
-// Toggle Drawer de Chat
-if (btnToggleChatDrawer) {
-  btnToggleChatDrawer.addEventListener('click', () => {
-    chatDrawer.classList.toggle('translate-x-[110%]');
-    chatUnreadDot.classList.add('hidden');
-  });
-}
-
-if (btnCloseChatDrawer) {
-  btnCloseChatDrawer.addEventListener('click', () => {
-    chatDrawer.classList.add('translate-x-[110%]');
-  });
-}
-
-// Saltar rápidamente a la siguiente sala
-window.nextRoomQuick = function () {
-  const roomOrder = ['sala-1', 'sala-2', 'sala-3'];
-  const currentIndex = roomOrder.indexOf(currentRoomId);
-  const nextRoom = roomOrder[(currentIndex + 1) % roomOrder.length];
-  
-  leaveCurrentRoom();
-  setTimeout(() => {
-    joinSelectedRoom(nextRoom);
-  }, 250);
-};
-
-// Reportar usuario
-window.reportCurrentPeer = function () {
-  const confirmReport = confirm('¿Deseas reportar al usuario actual por infringir las normas de la comunidad?');
-  if (confirmReport) {
-    alert('Reporte enviado correctamente a moderación. Cambiando de sala por tu seguridad...');
-    nextRoomQuick();
-  }
-};
-
-window.joinSelectedRoom = async function (roomId) {
+// Iniciar búsqueda automática
+window.startOmegleMatching = async function () {
   if (!localStream && !isAdminMode) {
     await initMediaPreview();
   }
 
-  socket.emit('join-room', { roomId, isAdmin: isAdminMode }, (response) => {
+  // Abrir pantalla de videochat
+  if (lobbyScreen) lobbyScreen.classList.add('hidden');
+  if (roomScreen) {
+    roomScreen.classList.remove('hidden');
+    roomScreen.classList.add('flex');
+  }
+
+  // Configurar pantalla dividida
+  if (normalDualCanvas) {
+    normalDualCanvas.classList.remove('hidden');
+    normalDualCanvas.classList.add('flex');
+  }
+  if (adminVideoArea) adminVideoArea.classList.add('hidden');
+
+  if (localVideo && localStream) {
+    localVideo.srcObject = localStream;
+    localVideo.play().catch(() => {});
+  }
+  applyBlurVisuals();
+
+  showRadarWaiting();
+  startCallTimer();
+
+  console.log(`🔥 Solicitando emparejamiento con tag: ${selectedTag}`);
+  socket.emit('find-match', { tag: selectedTag });
+};
+
+// Pasar inmediatamente a la siguiente persona (ESC o botón Próximo)
+window.skipToNextMatch = function () {
+  clearTimeout(autoNextTimer);
+  closeCurrentPeerConnection();
+
+  if (partnerSkippedOverlay) partnerSkippedOverlay.classList.add('hidden');
+  showRadarWaiting();
+
+  console.log(`⏩ Saltando a la siguiente pareja con tag: ${selectedTag}`);
+  socket.emit('next-match', { tag: selectedTag });
+};
+
+// Detener búsqueda y salir al lobby
+window.stopMatchingAndLeave = function () {
+  clearTimeout(autoNextTimer);
+  closeCurrentPeerConnection();
+  socket.emit('stop-matching');
+
+  currentRoomId = null;
+  currentPartnerId = null;
+  stopCallTimer();
+
+  if (roomScreen) {
+    roomScreen.classList.add('hidden');
+    roomScreen.classList.remove('flex');
+  }
+  if (lobbyScreen) lobbyScreen.classList.remove('hidden');
+
+  if (chatDrawer) chatDrawer.classList.add('translate-x-[110%]');
+  resetChatMessages();
+};
+
+function showRadarWaiting() {
+  if (waitingPlaceholder) waitingPlaceholder.classList.remove('hidden');
+  if (remoteVideo) remoteVideo.srcObject = null;
+  if (remotePeerLabel) remotePeerLabel.textContent = 'Buscando pareja...';
+  if (searchRadarTitle) searchRadarTitle.textContent = 'Buscando pareja erótica...';
+  if (searchRadarSubtitle) {
+    const tagDisplay = selectedTag === 'general' ? '+18 Sin filtros' : selectedTag.toUpperCase();
+    searchRadarSubtitle.textContent = `Conectando en sala privada · Categoría: ${tagDisplay}`;
+  }
+}
+
+// Reproducir tono sutil de notificación al hacer match (Web Audio API nativo)
+function playMatchChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Silencioso si el navegador restringe audio
+  }
+}
+
+// Eventos de emparejamiento desde el Servidor
+socket.on('searching-match', ({ tag }) => {
+  showRadarWaiting();
+});
+
+socket.on('match-found', async ({ roomId, partnerId, isInitiator, tag }) => {
+  console.log(`🎉 ¡Match encontrado! Sala: ${roomId}, Pareja: ${partnerId}, Iniciador: ${isInitiator}`);
+  clearTimeout(autoNextTimer);
+
+  currentRoomId = roomId;
+  currentPartnerId = partnerId;
+
+  if (waitingPlaceholder) waitingPlaceholder.classList.add('hidden');
+  if (partnerSkippedOverlay) partnerSkippedOverlay.classList.add('hidden');
+  if (remotePeerLabel) remotePeerLabel.textContent = 'Desconocido (1v1)';
+  if (roomCategoryLabel) roomCategoryLabel.textContent = `#${tag.toUpperCase()}`;
+
+  playMatchChime();
+
+  // Iniciar la conexión WebRTC
+  await initiatePeerConnection(partnerId, isInitiator);
+});
+
+socket.on('partner-disconnected', ({ reason }) => {
+  console.log('⚠️ Pareja desconectada:', reason);
+  closeCurrentPeerConnection();
+
+  if (partnerSkippedOverlay) {
+    partnerSkippedOverlay.classList.remove('hidden');
+  }
+  if (partnerSkippedTitle) {
+    partnerSkippedTitle.textContent = reason || 'Tu pareja ha pasado';
+  }
+
+  // Salto automático después de 3 segundos
+  clearTimeout(autoNextTimer);
+  autoNextTimer = setTimeout(() => {
+    skipToNextMatch();
+  }, 3000);
+});
+
+// ==================== 5. SUITES FIJAS (+18) ====================
+
+window.joinSelectedFixedRoom = async function (suiteId) {
+  if (!localStream && !isAdminMode) {
+    await initMediaPreview();
+  }
+
+  socket.emit('join-fixed-room', { roomId: suiteId, isAdmin: isAdminMode }, (response) => {
     if (!response || !response.success) {
-      alert(response ? response.message : 'No se pudo entrar a la sala.');
+      alert(response ? response.message : 'No se pudo ingresar a la suite.');
       return;
     }
 
-    currentRoomId = roomId;
-    currentRoomName.textContent = roomId.replace('sala-', 'Sala ');
+    currentRoomId = suiteId;
+    if (currentRoomName) currentRoomName.textContent = suiteId.toUpperCase();
 
-    // Mostrar pantalla de sala
-    lobbyScreen.classList.add('hidden');
-    roomScreen.classList.remove('hidden');
-    roomScreen.classList.add('flex');
+    if (lobbyScreen) lobbyScreen.classList.add('hidden');
+    if (roomScreen) {
+      roomScreen.classList.remove('hidden');
+      roomScreen.classList.add('flex');
+    }
 
     if (isAdminMode) {
-      normalDualCanvas.classList.add('hidden');
-      adminVideoArea.classList.remove('hidden');
-      adminVideoArea.classList.add('flex');
-    } else {
-      normalDualCanvas.classList.remove('hidden');
-      normalDualCanvas.classList.add('flex');
-      adminVideoArea.classList.add('hidden');
-      
-      if (localStream) {
-        localVideo.srcObject = localStream;
-        localVideo.play().catch(e => console.warn('localVideo play:', e));
+      if (normalDualCanvas) normalDualCanvas.classList.add('hidden');
+      if (adminVideoArea) {
+        adminVideoArea.classList.remove('hidden');
+        adminVideoArea.classList.add('flex');
       }
-      waitingPlaceholder.classList.remove('hidden');
+    } else {
+      if (normalDualCanvas) {
+        normalDualCanvas.classList.remove('hidden');
+        normalDualCanvas.classList.add('flex');
+      }
+      if (adminVideoArea) adminVideoArea.classList.add('hidden');
+
+      if (localVideo && localStream) {
+        localVideo.srcObject = localStream;
+        localVideo.play().catch(() => {});
+      }
+      if (waitingPlaceholder) waitingPlaceholder.classList.remove('hidden');
     }
 
-    // Iniciar temporizador
     startCallTimer();
 
-    // Notificación inicial de moderador si ya está dentro
-    if (response.hasAdmin) {
-      moderatorNotice.classList.remove('hidden');
-      moderatorNotice.classList.add('inline-flex');
-    }
-
-    // Conectar por WebRTC con los participantes ya presentes
+    // Conectar a los participantes existentes
     if (response.peers && response.peers.length > 0) {
       response.peers.forEach(peerId => {
         initiatePeerConnection(peerId, true);
@@ -486,145 +563,64 @@ window.joinSelectedRoom = async function (roomId) {
   });
 };
 
-btnLeaveRoom.addEventListener('click', leaveCurrentRoom);
+// Actualización del estado de las suites fijas
+socket.on('stats-update', (stats) => {
+  if (!stats) return;
 
-function leaveCurrentRoom() {
-  socket.emit('leave-room');
-  cleanupRoom();
-}
+  if (stats.fixedRooms) {
+    stats.fixedRooms.forEach(room => {
+      let badgeEl = null;
+      if (room.id === 'suite-1') badgeEl = badgeSuite1;
+      if (room.id === 'suite-2') badgeEl = badgeSuite2;
+      if (room.id === 'suite-3') badgeEl = badgeSuite3;
 
-function cleanupRoom() {
-  // Cerrar todas las conexiones WebRTC
+      if (badgeEl) {
+        if (room.userCount === 0) {
+          badgeEl.textContent = 'Libre (0/2)';
+          badgeEl.className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20';
+        } else if (room.userCount === 1) {
+          badgeEl.textContent = '1 esperando (1/2)';
+          badgeEl.className = 'text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20';
+        } else {
+          badgeEl.textContent = 'Ocupada (2/2)';
+          badgeEl.className = 'text-xs px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20';
+        }
+      }
+    });
+  }
+});
+
+// ==================== 6. SEÑALIZACIÓN & WEBRTC ====================
+
+function closeCurrentPeerConnection() {
   for (const [peerId, pc] of Object.entries(peerConnections)) {
-    pc.close();
+    try {
+      pc.close();
+    } catch (e) {}
     delete peerConnections[peerId];
   }
+  iceCandidateQueues = {};
 
-  currentRoomId = null;
-  stopCallTimer();
-
-  // Resetear videos
-  remoteVideo.srcObject = null;
-  adminVideo1.srcObject = null;
-  adminVideo2.srcObject = null;
-  adminFallback1.classList.remove('hidden');
-  adminFallback2.classList.remove('hidden');
-  moderatorNotice.classList.add('hidden');
-  moderatorNotice.classList.remove('inline-flex');
-  chatDrawer.classList.add('translate-x-[110%]');
-  chatMessages.innerHTML = `<div class="text-center text-slate-500 text-[11px] py-2 bg-dark-950/60 rounded-xl border border-dark-800">🔒 Conversación privada y cifrada.</div>`;
-
-  // Volver a Lobby
-  roomScreen.classList.add('hidden');
-  roomScreen.classList.remove('flex');
-  lobbyScreen.classList.remove('hidden');
+  if (remoteVideo) remoteVideo.srcObject = null;
+  if (adminVideo1) adminVideo1.srcObject = null;
+  if (adminVideo2) adminVideo2.srcObject = null;
 }
 
-// Expulsado por moderador
-socket.on('kicked', (data) => {
-  alert(data.reason || 'Has sido expulsado de la sala.');
-  cleanupRoom();
-});
-
-// ==================== 6. SEÑALIZACIÓN Y CONEXIONES WEBRTC ====================
-
-const iceCandidateQueues = {}; // { [peerId]: RTCIceCandidateInit[] }
-
-// Cuando un nuevo peer entra a la sala
-socket.on('peer-joined', ({ peerId, isAdmin }) => {
-  console.log(`📡 Peer se unió a la sala: ${peerId} (Admin: ${isAdmin})`);
-});
-
-// Recepción de señal WebRTC (Offer, Answer, ICE Candidate)
-socket.on('signal', async ({ senderId, isAdmin, signalData }) => {
-  let pc = peerConnections[senderId];
-
-  if (!pc) {
-    pc = createPeerConnection(senderId);
-  }
-
-  try {
-    if (signalData.type === 'offer') {
-      console.log(`📩 Recibida Oferta WebRTC de ${senderId}`);
-      await pc.setRemoteDescription(new RTCSessionDescription(signalData));
-      
-      // Vaciar candidatos ICE en cola
-      if (iceCandidateQueues[senderId]) {
-        for (const cand of iceCandidateQueues[senderId]) {
-          await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.warn('Error ICE queued:', e));
-        }
-        delete iceCandidateQueues[senderId];
-      }
-
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit('signal', {
-        targetId: senderId,
-        signalData: answer
-      });
-      console.log(`📤 Enviada Respuesta WebRTC a ${senderId}`);
-    } else if (signalData.type === 'answer') {
-      console.log(`📩 Recibida Respuesta WebRTC de ${senderId}`);
-      await pc.setRemoteDescription(new RTCSessionDescription(signalData));
-      
-      // Vaciar candidatos ICE en cola
-      if (iceCandidateQueues[senderId]) {
-        for (const cand of iceCandidateQueues[senderId]) {
-          await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.warn('Error ICE queued:', e));
-        }
-        delete iceCandidateQueues[senderId];
-      }
-    } else if (signalData.candidate) {
-      if (pc.remoteDescription && pc.remoteDescription.type) {
-        await pc.addIceCandidate(new RTCIceCandidate(signalData.candidate)).catch(e => console.warn('Error ICE direct:', e));
-      } else {
-        if (!iceCandidateQueues[senderId]) iceCandidateQueues[senderId] = [];
-        iceCandidateQueues[senderId].push(signalData.candidate);
-      }
-    }
-  } catch (err) {
-    console.error('Error procesando señal WebRTC:', err);
-  }
-});
-
-// Iniciar una nueva conexión como oferente (Caller)
-async function initiatePeerConnection(peerId, isInitiator) {
-  const pc = createPeerConnection(peerId);
-
-  if (isInitiator) {
-    try {
-      console.log(`📤 Creando Oferta WebRTC para ${peerId}...`);
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      });
-      await pc.setLocalDescription(offer);
-      socket.emit('signal', {
-        targetId: peerId,
-        signalData: offer
-      });
-    } catch (err) {
-      console.error('Error creando oferta WebRTC:', err);
-    }
-  }
-}
-
-// Crear instancia RTCPeerConnection y configurar listeners
 function createPeerConnection(peerId) {
   if (peerConnections[peerId]) return peerConnections[peerId];
 
-  console.log(`🛠️ Creando RTCPeerConnection para peer ${peerId}`);
+  console.log(`🛠️ Creando RTCPeerConnection para: ${peerId}`);
   const pc = new RTCPeerConnection(rtcConfig);
   peerConnections[peerId] = pc;
 
-  // Añadir pistas locales si existen y no soy admin espectador puro
+  // Añadir pistas de video y audio si existen y no soy administrador
   if (localStream && !isAdminMode) {
     localStream.getTracks().forEach(track => {
       pc.addTrack(track, localStream);
     });
   }
 
-  // Enviar candidatos ICE al otro extremo
+  // Enviar candidatos ICE
   pc.onicecandidate = (event) => {
     if (event.candidate) {
       socket.emit('signal', {
@@ -637,98 +633,174 @@ function createPeerConnection(peerId) {
   pc.oniceconnectionstatechange = () => {
     console.log(`⚡ Estado ICE con ${peerId}:`, pc.iceConnectionState);
     if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
-      waitingPlaceholder.classList.add('hidden');
+      if (waitingPlaceholder) waitingPlaceholder.classList.add('hidden');
     }
   };
 
   // Recibir stream remoto
   pc.ontrack = (event) => {
-    console.log('🎥 Pista o Stream remoto recibido de peer:', peerId, event.track.kind);
+    console.log(`🎥 Pista recibida (${event.track.kind}) de: ${peerId}`);
     const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
 
     if (isAdminMode) {
-      // Modo Supervisor
       if (!adminVideo1.srcObject || adminVideo1.srcObject.id === stream.id) {
         adminVideo1.srcObject = stream;
         adminVideo1.play().catch(() => {});
-        adminFallback1.classList.add('hidden');
+        if (adminFallback1) adminFallback1.classList.add('hidden');
       } else if (!adminVideo2.srcObject || adminVideo2.srcObject.id === stream.id) {
         adminVideo2.srcObject = stream;
         adminVideo2.play().catch(() => {});
-        adminFallback2.classList.add('hidden');
+        if (adminFallback2) adminFallback2.classList.add('hidden');
       }
     } else {
-      // Modo Normal: video 1 a 1
-      if (!remoteVideo.srcObject) {
-        remoteVideo.srcObject = stream;
-      } else {
-        // Asegurar que contiene las pistas
-        if (!remoteVideo.srcObject.getTracks().includes(event.track)) {
+      if (remoteVideo) {
+        if (!remoteVideo.srcObject) {
+          remoteVideo.srcObject = stream;
+        } else if (!remoteVideo.srcObject.getTracks().includes(event.track)) {
           remoteVideo.srcObject.addTrack(event.track);
         }
+        remoteVideo.play().catch(() => {});
       }
-      remoteVideo.play().catch(e => console.log('Autoplay play error:', e));
-      waitingPlaceholder.classList.add('hidden');
+      if (waitingPlaceholder) waitingPlaceholder.classList.add('hidden');
     }
   };
 
   return pc;
 }
 
-// Cuando un peer se va
-socket.on('peer-left', ({ peerId, isAdmin }) => {
+async function initiatePeerConnection(peerId, isInitiator) {
+  const pc = createPeerConnection(peerId);
+
+  if (isInitiator) {
+    try {
+      console.log(`📤 Creando y enviando Oferta WebRTC para ${peerId}...`);
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
+      await pc.setLocalDescription(offer);
+      socket.emit('signal', {
+        targetId: peerId,
+        signalData: offer
+      });
+    } catch (err) {
+      console.error('Error al generar oferta WebRTC:', err);
+    }
+  }
+}
+
+// Receptor de señales WebRTC
+socket.on('signal', async ({ senderId, signalData }) => {
+  let pc = peerConnections[senderId];
+  if (!pc) {
+    pc = createPeerConnection(senderId);
+  }
+
+  try {
+    if (signalData.type === 'offer') {
+      console.log(`📩 Oferta WebRTC recibida de ${senderId}`);
+      await pc.setRemoteDescription(new RTCSessionDescription(signalData));
+
+      // Drenar candidatos en cola
+      if (iceCandidateQueues[senderId]) {
+        for (const cand of iceCandidateQueues[senderId]) {
+          await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(() => {});
+        }
+        delete iceCandidateQueues[senderId];
+      }
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit('signal', {
+        targetId: senderId,
+        signalData: answer
+      });
+    } else if (signalData.type === 'answer') {
+      console.log(`📩 Respuesta WebRTC recibida de ${senderId}`);
+      await pc.setRemoteDescription(new RTCSessionDescription(signalData));
+
+      if (iceCandidateQueues[senderId]) {
+        for (const cand of iceCandidateQueues[senderId]) {
+          await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(() => {});
+        }
+        delete iceCandidateQueues[senderId];
+      }
+    } else if (signalData.candidate) {
+      if (pc.remoteDescription && pc.remoteDescription.type) {
+        await pc.addIceCandidate(new RTCIceCandidate(signalData.candidate)).catch(() => {});
+      } else {
+        if (!iceCandidateQueues[senderId]) iceCandidateQueues[senderId] = [];
+        iceCandidateQueues[senderId].push(signalData.candidate);
+      }
+    }
+  } catch (err) {
+    console.error('Error procesando señal WebRTC:', err);
+  }
+});
+
+// Cuando un peer abandona en salas fijas
+socket.on('peer-left', ({ peerId }) => {
   if (peerConnections[peerId]) {
     peerConnections[peerId].close();
     delete peerConnections[peerId];
   }
-
-  if (isAdminMode) {
-    if (adminVideo1.srcObject && adminVideo1.srcObject.id === peerId) {
-      adminVideo1.srcObject = null;
-      adminFallback1.classList.remove('hidden');
-    } else if (adminVideo2.srcObject && adminVideo2.srcObject.id === peerId) {
-      adminVideo2.srcObject = null;
-      adminFallback2.classList.remove('hidden');
-    }
-  } else {
-    // Si no quedan peers en la sala, mostrar esperando
-    if (Object.keys(peerConnections).length === 0) {
-      remoteVideo.srcObject = null;
-      waitingPlaceholder.classList.remove('hidden');
-    }
+  if (Object.keys(peerConnections).length === 0 && !isAdminMode) {
+    if (remoteVideo) remoteVideo.srcObject = null;
+    if (waitingPlaceholder) waitingPlaceholder.classList.remove('hidden');
   }
 });
 
-// Aviso visual de moderador presente (Cumplimiento Legal)
+// Aviso de presencia de moderador
 socket.on('moderation-status', ({ active, count }) => {
-  if (active && count > 0) {
-    moderatorNotice.classList.remove('hidden');
-  } else {
-    moderatorNotice.classList.add('hidden');
+  if (moderatorNotice) {
+    if (active && count > 0) {
+      moderatorNotice.classList.remove('hidden');
+      moderatorNotice.classList.add('inline-flex');
+    } else {
+      moderatorNotice.classList.add('hidden');
+      moderatorNotice.classList.remove('inline-flex');
+    }
   }
 });
 
-// ==================== 7. CHAT EN VIVO DENTRO DE LA SALA ====================
+// ==================== 7. CHAT INTEGRADO EN SALA ====================
 
-chatForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const text = chatInput.value.trim();
-  if (!text || !currentRoomId) return;
-
-  socket.emit('send-chat', {
-    roomId: currentRoomId,
-    message: text,
-    senderName: isAdminMode ? '🛡️ Moderador' : 'Tú'
+if (btnToggleChatDrawer) {
+  btnToggleChatDrawer.addEventListener('click', () => {
+    if (chatDrawer) {
+      chatDrawer.classList.toggle('translate-x-[110%]');
+      if (chatUnreadDot) chatUnreadDot.classList.add('hidden');
+    }
   });
+}
 
-  chatInput.value = '';
-});
+if (btnCloseChatDrawer) {
+  btnCloseChatDrawer.addEventListener('click', () => {
+    if (chatDrawer) chatDrawer.classList.add('translate-x-[110%]');
+  });
+}
+
+if (chatForm) {
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = chatInput ? chatInput.value.trim() : '';
+    if (!text || !currentRoomId) return;
+
+    socket.emit('send-chat', {
+      roomId: currentRoomId,
+      message: text,
+      senderName: isAdminMode ? '🛡️ Moderador' : 'Tú'
+    });
+
+    if (chatInput) chatInput.value = '';
+  });
+}
 
 socket.on('new-chat', (data) => {
   const isMe = data.senderId === socket.id;
   const msgDiv = document.createElement('div');
   msgDiv.className = `p-2.5 rounded-2xl text-xs max-w-[85%] ${
-    data.isAdmin 
+    data.isAdmin
       ? 'bg-amber-500/20 border border-amber-500/30 text-amber-200 ml-auto'
       : isMe
         ? 'bg-amber-500 text-dark-950 font-semibold ml-auto'
@@ -743,14 +815,22 @@ socket.on('new-chat', (data) => {
     <div class="break-words">${escapeHtml(data.message)}</div>
   `;
 
-  chatMessages.appendChild(msgDiv);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  if (chatMessages) {
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
 
-  // Si el panel de chat esta cerrado y el mensaje no es mio, mostrar punto amarillo de nuevo mensaje
+  // Notificación de nuevo mensaje si el drawer está cerrado
   if (!isMe && chatDrawer && chatDrawer.classList.contains('translate-x-[110%]')) {
     if (chatUnreadDot) chatUnreadDot.classList.remove('hidden');
   }
 });
+
+function resetChatMessages() {
+  if (chatMessages) {
+    chatMessages.innerHTML = `<div class="text-center text-slate-500 text-[11px] py-2 bg-dark-950/60 rounded-xl border border-dark-800">🔒 Conversación privada y cifrada.</div>`;
+  }
+}
 
 function escapeHtml(text) {
   const div = document.createElement('div');
@@ -758,21 +838,132 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ==================== 8. TEMPORIZADOR DE LLAMADA ====================
+// ==================== 8. REPORTES & SEGURIDAD ====================
+
+window.reportCurrentPeer = function () {
+  const confirmReport = confirm('¿Deseas reportar al usuario actual por conducta inapropiada o violación de términos?');
+  if (confirmReport) {
+    alert('Reporte enviado a nuestro equipo de moderación. Pasando a la siguiente pareja por tu seguridad...');
+    skipToNextMatch();
+  }
+};
+
+// ==================== 9. ATAJOS DE TECLADO (ESTILO OMEGLE) ====================
+
+document.addEventListener('keydown', (e) => {
+  // Ignorar atajos si el usuario está escribiendo en el chat o en el input del admin PIN
+  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+  if (activeTag === 'input' || activeTag === 'textarea') {
+    return;
+  }
+
+  // Acceso Secreto Administrador: Ctrl + Shift + A
+  if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+    e.preventDefault();
+    if (adminLoginModal) {
+      adminLoginModal.classList.remove('hidden');
+      adminLoginModal.classList.add('flex');
+      if (adminPinInput) {
+        adminPinInput.value = '';
+        adminPinInput.focus();
+      }
+      if (adminErrorMsg) adminErrorMsg.classList.add('hidden');
+    }
+    return;
+  }
+
+  // Si estamos dentro de una llamada activa
+  if (roomScreen && !roomScreen.classList.contains('hidden')) {
+    // Tecla ESC o Barra Espaciadora: Siguiente Match (Next)
+    if (e.key === 'Escape' || e.code === 'Space') {
+      e.preventDefault();
+      skipToNextMatch();
+    }
+    // Tecla B: Máscara / Blur
+    else if (e.key === 'b' || e.key === 'B') {
+      e.preventDefault();
+      togglePrivacyBlur();
+    }
+    // Tecla M: Micrófono
+    else if (e.key === 'm' || e.key === 'M') {
+      e.preventDefault();
+      toggleAudio();
+    }
+    // Tecla V: Cámara
+    else if (e.key === 'v' || e.key === 'V') {
+      e.preventDefault();
+      toggleVideo();
+    }
+  }
+});
+
+// ==================== 10. MODAL ADMINISTRADOR ====================
+
+if (btnOpenAdminModal) {
+  btnOpenAdminModal.addEventListener('click', () => {
+    if (adminLoginModal) {
+      adminLoginModal.classList.remove('hidden');
+      adminLoginModal.classList.add('flex');
+      if (adminPinInput) {
+        adminPinInput.value = '';
+        adminPinInput.focus();
+      }
+      if (adminErrorMsg) adminErrorMsg.classList.add('hidden');
+    }
+  });
+}
+
+if (btnCloseAdminModal) {
+  btnCloseAdminModal.addEventListener('click', () => {
+    if (adminLoginModal) {
+      adminLoginModal.classList.add('hidden');
+      adminLoginModal.classList.remove('flex');
+    }
+  });
+}
+
+if (adminLoginForm) {
+  adminLoginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const pin = adminPinInput ? adminPinInput.value : '';
+    socket.emit('verify-admin', pin, (res) => {
+      if (res && res.success) {
+        isAdminMode = true;
+        if (adminLoginModal) {
+          adminLoginModal.classList.add('hidden');
+          adminLoginModal.classList.remove('flex');
+        }
+        if (adminBadge) {
+          adminBadge.classList.remove('hidden');
+          adminBadge.classList.add('flex');
+        }
+        if (btnOpenAdminModal) {
+          btnOpenAdminModal.innerHTML = `<i class="fa-solid fa-crown text-amber-400"></i><span>Admin ON</span>`;
+        }
+        alert('Modo Administrador y Supervisión activado.');
+      } else {
+        if (adminErrorMsg) adminErrorMsg.classList.remove('hidden');
+      }
+    });
+  });
+}
+
+// ==================== 11. TEMPORIZADOR DE LLAMADA ====================
 
 function startCallTimer() {
   callSeconds = 0;
-  callTimer.textContent = '00:00';
+  if (callTimer) callTimer.textContent = '00:00';
   clearInterval(callTimerInterval);
   callTimerInterval = setInterval(() => {
     callSeconds++;
     const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
     const secs = String(callSeconds % 60).padStart(2, '0');
-    callTimer.textContent = `${mins}:${secs}`;
+    if (callTimer) callTimer.textContent = `${mins}:${secs}`;
   }, 1000);
 }
 
 function stopCallTimer() {
   clearInterval(callTimerInterval);
   callSeconds = 0;
+  if (callTimer) callTimer.textContent = '00:00';
 }
