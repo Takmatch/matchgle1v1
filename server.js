@@ -70,7 +70,21 @@ function broadcastSystemStats() {
   io.emit('stats-update', getSystemStats());
 }
 
-// ==================== LÓGICA DE MATCHMAKING (ESTILO OMEGLE) ====================
+// ==================== LÓGICA DE MATCHMAKING (ESTILO OMEGLE + PRIORIDAD MUJER ↔ HOMBRE) ====================
+
+function isTagCompatible(tagA, tagB) {
+  return tagA === 'general' || tagB === 'general' || tagA === tagB;
+}
+
+function isStrictHetero(a, b) {
+  return (a.gender === 'hombre' && b.gender === 'mujer') || (a.gender === 'mujer' && b.gender === 'hombre');
+}
+
+function isGenderCompatible(a, b) {
+  const aWantsB = a.lookingFor === 'todos' || a.lookingFor === b.gender;
+  const bWantsA = b.lookingFor === 'todos' || b.lookingFor === a.gender;
+  return aWantsB && bWantsA;
+}
 
 function processMatchmaking() {
   // Limpiar posibles sockets desconectados en la cola
@@ -81,42 +95,76 @@ function processMatchmaking() {
 
   if (matchmakingQueue.length < 2) return;
 
-  // Intentar emparejar por etiqueta compatible primero
+  const now = Date.now();
+
+  // FASE 1 (MÁXIMA PRIORIDAD): Mujer ↔ Hombre con Categoría Erótica Compatible
   for (let i = 0; i < matchmakingQueue.length - 1; i++) {
     const candidateA = matchmakingQueue[i];
 
     for (let j = i + 1; j < matchmakingQueue.length; j++) {
       const candidateB = matchmakingQueue[j];
 
-      const matchTag = (candidateA.tag === 'general' || candidateB.tag === 'general' || candidateA.tag === candidateB);
-
-      if (matchTag) {
-        // Emparejar a estos dos usuarios
+      if (isStrictHetero(candidateA, candidateB) && isTagCompatible(candidateA.tag, candidateB.tag)) {
         matchmakingQueue.splice(j, 1);
         matchmakingQueue.splice(i, 1);
-
-        createDynamicPair(candidateA.socket, candidateB.socket, candidateA.tag || 'general');
-        return processMatchmaking(); // Continuar con los siguientes en cola
+        createDynamicPair(candidateA, candidateB, candidateA.tag || 'general');
+        return processMatchmaking();
       }
     }
   }
 
-  // Si no hay match exacto pero hay al menos 2 personas en cola y llevan más de 3 segundos, emparejar directamente
-  const now = Date.now();
-  if (matchmakingQueue.length >= 2) {
-    const first = matchmakingQueue[0];
-    const second = matchmakingQueue[1];
+  // FASE 2: Mujer ↔ Hombre con cualquier categoría (si llevan más de 2 segundos esperando)
+  for (let i = 0; i < matchmakingQueue.length - 1; i++) {
+    const candidateA = matchmakingQueue[i];
 
-    if ((now - first.joinedAt > 3000) || (now - second.joinedAt > 3000)) {
-      matchmakingQueue.splice(1, 1);
-      matchmakingQueue.splice(0, 1);
-      createDynamicPair(first.socket, second.socket, 'general');
-      return processMatchmaking();
+    for (let j = i + 1; j < matchmakingQueue.length; j++) {
+      const candidateB = matchmakingQueue[j];
+
+      if (isStrictHetero(candidateA, candidateB) && ((now - candidateA.joinedAt > 2000) || (now - candidateB.joinedAt > 2000))) {
+        matchmakingQueue.splice(j, 1);
+        matchmakingQueue.splice(i, 1);
+        createDynamicPair(candidateA, candidateB, 'general');
+        return processMatchmaking();
+      }
+    }
+  }
+
+  // FASE 3: Preferencia de búsqueda mutua respetada (ej. si alguno eligió 'todos') y etiqueta compatible
+  for (let i = 0; i < matchmakingQueue.length - 1; i++) {
+    const candidateA = matchmakingQueue[i];
+
+    for (let j = i + 1; j < matchmakingQueue.length; j++) {
+      const candidateB = matchmakingQueue[j];
+
+      if (isGenderCompatible(candidateA, candidateB) && isTagCompatible(candidateA.tag, candidateB.tag)) {
+        matchmakingQueue.splice(j, 1);
+        matchmakingQueue.splice(i, 1);
+        createDynamicPair(candidateA, candidateB, candidateA.tag || 'general');
+        return processMatchmaking();
+      }
+    }
+  }
+
+  // FASE 4: Timeout de fluidez (más de 5.5s esperando): emparejar para que los usuarios no queden en espera infinita
+  for (let i = 0; i < matchmakingQueue.length - 1; i++) {
+    const candidateA = matchmakingQueue[i];
+
+    for (let j = i + 1; j < matchmakingQueue.length; j++) {
+      const candidateB = matchmakingQueue[j];
+
+      if ((now - candidateA.joinedAt > 5500) || (now - candidateB.joinedAt > 5500)) {
+        matchmakingQueue.splice(j, 1);
+        matchmakingQueue.splice(i, 1);
+        createDynamicPair(candidateA, candidateB, 'general');
+        return processMatchmaking();
+      }
     }
   }
 }
 
-function createDynamicPair(socketA, socketB, tag) {
+function createDynamicPair(candidateA, candidateB, tag) {
+  const socketA = candidateA.socket;
+  const socketB = candidateB.socket;
   if (!socketA.connected || !socketB.connected) return;
 
   const roomId = generateRoomId();
@@ -125,6 +173,8 @@ function createDynamicPair(socketA, socketB, tag) {
     id: roomId,
     users: [socketA.id, socketB.id],
     tag,
+    genderA: candidateA.gender,
+    genderB: candidateB.gender,
     createdAt: Date.now(),
     admins: []
   };
@@ -138,21 +188,25 @@ function createDynamicPair(socketA, socketB, tag) {
   socketB.data.currentRoom = roomId;
   socketB.data.isDynamic = true;
 
-  console.log(`🔥 [Matchmaker] Pareja formada en ${roomId}: ${socketA.id} <-> ${socketB.id} [Tag: ${tag}]`);
+  console.log(`🔥 [Matchmaker] Pareja formada en ${roomId}: [${candidateA.gender.toUpperCase()}] ${socketA.id} <-> [${candidateB.gender.toUpperCase()}] ${socketB.id} [Tag: ${tag}]`);
 
   // SocketA actúa como iniciador de WebRTC (Caller), SocketB como receptor (Answerer)
   socketA.emit('match-found', {
     roomId,
     partnerId: socketB.id,
     isInitiator: true,
-    tag
+    tag,
+    myGender: candidateA.gender,
+    partnerGender: candidateB.gender
   });
 
   socketB.emit('match-found', {
     roomId,
     partnerId: socketA.id,
     isInitiator: false,
-    tag
+    tag,
+    myGender: candidateB.gender,
+    partnerGender: candidateA.gender
   });
 
   broadcastSystemStats();
@@ -174,19 +228,23 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 2. Pedir emparejamiento automático (Omegle Matchmaker)
-  socket.on('find-match', ({ tag = 'general' }) => {
-    // Si ya estaba en una sala o en la cola, sacarlo primero
+  // 2. Pedir emparejamiento automático (Omegle Matchmaker con Género)
+  socket.on('find-match', ({ tag = 'general', gender = 'hombre', lookingFor }) => {
     leaveCurrentRoomOrQueue(socket);
+
+    const safeGender = (gender === 'mujer') ? 'mujer' : 'hombre';
+    const safeLookingFor = lookingFor || (safeGender === 'mujer' ? 'hombre' : 'mujer');
 
     matchmakingQueue.push({
       socketId: socket.id,
       socket,
       tag: tag || 'general',
+      gender: safeGender,
+      lookingFor: safeLookingFor,
       joinedAt: Date.now()
     });
 
-    socket.emit('searching-match', { tag });
+    socket.emit('searching-match', { tag, gender: safeGender, lookingFor: safeLookingFor });
     broadcastSystemStats();
 
     // Procesar emparejamiento inmediatamente
@@ -194,19 +252,22 @@ io.on('connection', (socket) => {
   });
 
   // 3. Saltar a la siguiente persona (Botón "Next / Próximo" de Omegle)
-  socket.on('next-match', ({ tag = 'general' }) => {
-    const oldRoomId = socket.data.currentRoom;
+  socket.on('next-match', ({ tag = 'general', gender = 'hombre', lookingFor }) => {
     leaveCurrentRoomOrQueue(socket, 'skipped');
 
-    // Volver a entrar a la cola automáticamente para buscar a la siguiente pareja
+    const safeGender = (gender === 'mujer') ? 'mujer' : 'hombre';
+    const safeLookingFor = lookingFor || (safeGender === 'mujer' ? 'hombre' : 'mujer');
+
     matchmakingQueue.push({
       socketId: socket.id,
       socket,
       tag: tag || 'general',
+      gender: safeGender,
+      lookingFor: safeLookingFor,
       joinedAt: Date.now()
     });
 
-    socket.emit('searching-match', { tag });
+    socket.emit('searching-match', { tag, gender: safeGender, lookingFor: safeLookingFor });
     broadcastSystemStats();
     setTimeout(processMatchmaking, 100);
   });

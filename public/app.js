@@ -32,6 +32,8 @@ let peerConnections = {}; // { [peerId]: RTCPeerConnection }
 let iceCandidateQueues = {}; // { [peerId]: RTCIceCandidateInit[] }
 
 let selectedTag = 'general';
+let userGender = localStorage.getItem('matchgle_user_gender') || 'hombre'; // 'hombre' | 'mujer'
+let userLookingFor = localStorage.getItem('matchgle_looking_for') || (userGender === 'mujer' ? 'hombre' : 'mujer'); // 'hombre' | 'mujer' | 'todos'
 let currentLobbyMode = 'auto'; // 'auto' | 'suites'
 let autoNextTimer = null;
 let callTimerInterval = null;
@@ -60,6 +62,14 @@ const panelAutoMatchControls = document.getElementById('panelAutoMatchControls')
 const panelSuitesControls = document.getElementById('panelSuitesControls');
 const selectedTagBadge = document.getElementById('selectedTagBadge');
 const btnStartAutoMatch = document.getElementById('btnStartAutoMatch');
+
+const btnGenderHombre = document.getElementById('btnGenderHombre');
+const btnGenderMujer = document.getElementById('btnGenderMujer');
+const btnLookMujer = document.getElementById('btnLookMujer');
+const btnLookHombre = document.getElementById('btnLookHombre');
+const btnLookTodos = document.getElementById('btnLookTodos');
+const localGenderBadge = document.getElementById('localGenderBadge');
+const remoteGenderBadge = document.getElementById('remoteGenderBadge');
 
 const badgeSuite1 = document.getElementById('badgeSuite1');
 const badgeSuite2 = document.getElementById('badgeSuite2');
@@ -367,6 +377,69 @@ window.selectInterestTag = function (tag) {
   });
 };
 
+// ==================== GESTIÓN DE GÉNERO Y PREFERENCIA HETERO ====================
+
+window.setUserGender = function (gender) {
+  userGender = (gender === 'mujer') ? 'mujer' : 'hombre';
+  // Por defecto, emparejar con el sexo opuesto
+  userLookingFor = (userGender === 'mujer') ? 'hombre' : 'mujer';
+
+  localStorage.setItem('matchgle_user_gender', userGender);
+  localStorage.setItem('matchgle_looking_for', userLookingFor);
+
+  updateGenderUI();
+};
+
+window.setUserLookingFor = function (lookingFor) {
+  userLookingFor = lookingFor;
+  localStorage.setItem('matchgle_looking_for', userLookingFor);
+  updateGenderUI();
+};
+
+function updateGenderUI() {
+  // 1. Botones de "Soy"
+  if (btnGenderHombre && btnGenderMujer) {
+    if (userGender === 'hombre') {
+      btnGenderHombre.className = 'py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 flex items-center justify-center gap-2 transition hover:scale-[1.02] shadow-sm';
+      btnGenderMujer.className = 'py-2.5 px-3 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex items-center justify-center gap-2 transition hover:scale-[1.02]';
+    } else {
+      btnGenderHombre.className = 'py-2.5 px-3 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex items-center justify-center gap-2 transition hover:scale-[1.02]';
+      btnGenderMujer.className = 'py-2.5 px-3 rounded-xl border border-rose-500 bg-rose-500/20 text-rose-300 flex items-center justify-center gap-2 transition hover:scale-[1.02] shadow-sm';
+    }
+  }
+
+  // 2. Botones de "Busco"
+  const lookBtns = [
+    { el: btnLookMujer, val: 'mujer', activeClass: 'px-2.5 py-1 rounded-lg font-bold border border-rose-500/40 bg-rose-500/20 text-rose-300 text-[10px] transition' },
+    { el: btnLookHombre, val: 'hombre', activeClass: 'px-2.5 py-1 rounded-lg font-bold border border-amber-500/40 bg-amber-500/20 text-amber-300 text-[10px] transition' },
+    { el: btnLookTodos, val: 'todos', activeClass: 'px-2.5 py-1 rounded-lg font-bold border border-purple-500/40 bg-purple-500/20 text-purple-300 text-[10px] transition' }
+  ];
+
+  lookBtns.forEach(item => {
+    if (item.el) {
+      if (userLookingFor === item.val) {
+        item.el.className = item.activeClass;
+      } else {
+        item.el.className = 'px-2.5 py-1 rounded-lg font-bold border border-dark-700 bg-dark-900 text-slate-400 hover:text-white text-[10px] transition';
+      }
+    }
+  });
+
+  // 3. Badge en la pantalla de cámara local
+  if (localGenderBadge) {
+    if (userGender === 'mujer') {
+      localGenderBadge.textContent = '👩 Mujer';
+      localGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+    } else {
+      localGenderBadge.textContent = '👨 Hombre';
+      localGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+    }
+  }
+}
+
+// Inicializar la interfaz de género
+updateGenderUI();
+
 // ==================== 4. MOTOR DE EMPAREJAMIENTO AUTOMÁTICO (OMEGLE) ====================
 
 // Iniciar búsqueda automática
@@ -398,8 +471,12 @@ window.startOmegleMatching = async function () {
   showRadarWaiting();
   startCallTimer();
 
-  console.log(`🔥 Solicitando emparejamiento con tag: ${selectedTag}`);
-  socket.emit('find-match', { tag: selectedTag });
+  console.log(`🔥 Solicitando emparejamiento: [${userGender}] busca [${userLookingFor}] en tag: ${selectedTag}`);
+  socket.emit('find-match', {
+    tag: selectedTag,
+    gender: userGender,
+    lookingFor: userLookingFor
+  });
 };
 
 // Pasar inmediatamente a la siguiente persona (ESC o botón Próximo)
@@ -408,10 +485,15 @@ window.skipToNextMatch = function () {
   closeCurrentPeerConnection();
 
   if (partnerSkippedOverlay) partnerSkippedOverlay.classList.add('hidden');
+  if (remoteGenderBadge) remoteGenderBadge.classList.add('hidden');
   showRadarWaiting();
 
-  console.log(`⏩ Saltando a la siguiente pareja con tag: ${selectedTag}`);
-  socket.emit('next-match', { tag: selectedTag });
+  console.log(`⏩ Saltando a la siguiente pareja: [${userGender}] busca [${userLookingFor}] [Tag: ${selectedTag}]`);
+  socket.emit('next-match', {
+    tag: selectedTag,
+    gender: userGender,
+    lookingFor: userLookingFor
+  });
 };
 
 // Detener búsqueda y salir al lobby
@@ -429,6 +511,7 @@ window.stopMatchingAndLeave = function () {
     roomScreen.classList.remove('flex');
   }
   if (lobbyScreen) lobbyScreen.classList.remove('hidden');
+  if (remoteGenderBadge) remoteGenderBadge.classList.add('hidden');
 
   if (chatDrawer) chatDrawer.classList.add('translate-x-[110%]');
   resetChatMessages();
@@ -437,11 +520,15 @@ window.stopMatchingAndLeave = function () {
 function showRadarWaiting() {
   if (waitingPlaceholder) waitingPlaceholder.classList.remove('hidden');
   if (remoteVideo) remoteVideo.srcObject = null;
+  if (remoteGenderBadge) remoteGenderBadge.classList.add('hidden');
   if (remotePeerLabel) remotePeerLabel.textContent = 'Buscando pareja...';
-  if (searchRadarTitle) searchRadarTitle.textContent = 'Buscando pareja erótica...';
+  if (searchRadarTitle) {
+    const targetLabel = userLookingFor === 'mujer' ? 'una mujer' : userLookingFor === 'hombre' ? 'un hombre' : 'tu pareja';
+    searchRadarTitle.textContent = `Buscando ${targetLabel}...`;
+  }
   if (searchRadarSubtitle) {
     const tagDisplay = selectedTag === 'general' ? '+18 Sin filtros' : selectedTag.toUpperCase();
-    searchRadarSubtitle.textContent = `Conectando en sala privada · Categoría: ${tagDisplay}`;
+    searchRadarSubtitle.textContent = `Prioridad: Mujer ↔ Hombre · Categoría: ${tagDisplay}`;
   }
 }
 
@@ -470,12 +557,12 @@ function playMatchChime() {
 }
 
 // Eventos de emparejamiento desde el Servidor
-socket.on('searching-match', ({ tag }) => {
+socket.on('searching-match', ({ tag, gender, lookingFor }) => {
   showRadarWaiting();
 });
 
-socket.on('match-found', async ({ roomId, partnerId, isInitiator, tag }) => {
-  console.log(`🎉 ¡Match encontrado! Sala: ${roomId}, Pareja: ${partnerId}, Iniciador: ${isInitiator}`);
+socket.on('match-found', async ({ roomId, partnerId, isInitiator, tag, myGender, partnerGender }) => {
+  console.log(`🎉 ¡Match encontrado! Sala: ${roomId}, Pareja: ${partnerId}, Pareja Género: ${partnerGender}, Iniciador: ${isInitiator}`);
   clearTimeout(autoNextTimer);
 
   currentRoomId = roomId;
@@ -483,7 +570,23 @@ socket.on('match-found', async ({ roomId, partnerId, isInitiator, tag }) => {
 
   if (waitingPlaceholder) waitingPlaceholder.classList.add('hidden');
   if (partnerSkippedOverlay) partnerSkippedOverlay.classList.add('hidden');
-  if (remotePeerLabel) remotePeerLabel.textContent = 'Desconocido (1v1)';
+  if (remotePeerLabel) remotePeerLabel.textContent = 'Desconocido';
+
+  // Mostrar el género de la pareja emparejada
+  if (remoteGenderBadge) {
+    if (partnerGender === 'mujer') {
+      remoteGenderBadge.textContent = '👩 Mujer';
+      remoteGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+      remoteGenderBadge.classList.remove('hidden');
+    } else if (partnerGender === 'hombre') {
+      remoteGenderBadge.textContent = '👨 Hombre';
+      remoteGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      remoteGenderBadge.classList.remove('hidden');
+    } else {
+      remoteGenderBadge.classList.add('hidden');
+    }
+  }
+
   if (roomCategoryLabel) roomCategoryLabel.textContent = `#${tag.toUpperCase()}`;
 
   playMatchChime();

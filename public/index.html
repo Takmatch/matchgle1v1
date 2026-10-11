@@ -391,9 +391,47 @@
         </div>
 
         <!-- FILTROS ERÓTICOS / TAGS (+18) -->
-        <div class="space-y-3" id="panelAutoMatchControls">
+        <div class="space-y-4" id="panelAutoMatchControls">
+
+          <!-- SELECTOR DE GÉNERO Y EMPAREJAMIENTO HETERO (MUJER ↔ HOMBRE) -->
+          <div class="p-3.5 bg-dark-950/80 rounded-2xl border border-dark-800 space-y-2.5">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-300">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-venus-mars text-rose-400"></i> ¿Cuál es tu género?</span>
+              <span class="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                Prioridad: Mujer ↔ Hombre
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+              <button type="button" onclick="setUserGender('hombre')" id="btnGenderHombre" class="py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 flex items-center justify-center gap-2 transition hover:scale-[1.02]">
+                <span class="text-base">👨</span>
+                <span class="font-black">Soy Hombre</span>
+              </button>
+              <button type="button" onclick="setUserGender('mujer')" id="btnGenderMujer" class="py-2.5 px-3 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex items-center justify-center gap-2 transition hover:scale-[1.02]">
+                <span class="text-base">👩</span>
+                <span class="font-black">Soy Mujer</span>
+              </button>
+            </div>
+
+            <!-- Preferencia de búsqueda -->
+            <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+              <span class="font-semibold">Emparejar con:</span>
+              <div class="flex items-center gap-1" id="lookingForButtonGroup">
+                <button type="button" onclick="setUserLookingFor('mujer')" id="btnLookMujer" class="px-2.5 py-1 rounded-lg font-bold border border-rose-500/40 bg-rose-500/20 text-rose-300 text-[10px] transition">
+                  👩 Mujeres
+                </button>
+                <button type="button" onclick="setUserLookingFor('hombre')" id="btnLookHombre" class="px-2.5 py-1 rounded-lg font-bold border border-dark-700 bg-dark-900 text-slate-400 hover:text-white text-[10px] transition">
+                  👨 Hombres
+                </button>
+                <button type="button" onclick="setUserLookingFor('todos')" id="btnLookTodos" class="px-2.5 py-1 rounded-lg font-bold border border-dark-700 bg-dark-900 text-slate-400 hover:text-white text-[10px] transition">
+                  ⚡ Ambos
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="flex items-center justify-between text-xs font-bold text-slate-300">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-tags text-amber-400"></i> Elige tu categoría erótica:</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-tags text-amber-400"></i> Categoría erótica:</span>
             <span id="selectedTagBadge" class="text-amber-400 text-[11px] font-black uppercase">#General</span>
           </div>
 
@@ -525,11 +563,12 @@
           <!-- Badge Superior Izquierdo -->
           <div class="absolute top-4 left-4 bg-dark-950/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-white flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Tú (Cámara local)</span>
+            <span>Tú</span>
+            <span id="localGenderBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">👨 Hombre</span>
           </div>
 
           <!-- Indicador de Máscara en Vivo -->
-          <span id="localMaskIndicator" class="hidden absolute top-4 left-36 bg-purple-500/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-purple-500/40 text-[10px] font-bold text-purple-300">
+          <span id="localMaskIndicator" class="hidden absolute top-4 left-44 bg-purple-500/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-purple-500/40 text-[10px] font-bold text-purple-300">
             Máscara ON
           </span>
 
@@ -546,7 +585,8 @@
           <!-- Badge Superior Derecho -->
           <div class="absolute top-4 left-4 bg-dark-950/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-xs font-bold text-white flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="remotePeerLabel">Desconocido (1v1)</span>
+            <span id="remotePeerLabel">Desconocido</span>
+            <span id="remoteGenderBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">👩 Pareja</span>
           </div>
 
           <!-- Botón de Reporte (Bandera) -->
