@@ -264,6 +264,10 @@
         </label>
       </div>
 
+      <div class="text-[11px] text-slate-400 text-center mb-4">
+        Al acceder aceptas nuestros <a href="/seguridad.html" target="_blank" class="text-amber-400 underline hover:text-amber-300 font-semibold">Términos de Servicio y Privacidad (+18)</a>.
+      </div>
+
       <div class="flex flex-col gap-2">
         <button id="btnAcceptAge" disabled class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-dark-950 font-black tracking-wide shadow-lg shadow-amber-500/25 transition duration-200">
           Entrar a las Salas
@@ -403,12 +407,12 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-xs font-bold">
-              <button type="button" onclick="setUserGender('hombre')" id="btnGenderHombre" class="py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 flex items-center justify-center gap-2 transition hover:scale-[1.02]">
-                <span class="text-base">👨</span>
+              <button type="button" onclick="setUserGender('hombre')" id="btnGenderHombre" class="py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 flex items-center justify-center gap-2.5 transition hover:scale-[1.02]">
+                <i class="fa-solid fa-mars text-base text-amber-400"></i>
                 <span class="font-black">Soy Hombre</span>
               </button>
-              <button type="button" onclick="setUserGender('mujer')" id="btnGenderMujer" class="py-2.5 px-3 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex items-center justify-center gap-2 transition hover:scale-[1.02]">
-                <span class="text-base">👩</span>
+              <button type="button" onclick="setUserGender('mujer')" id="btnGenderMujer" class="py-2.5 px-3 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex items-center justify-center gap-2.5 transition hover:scale-[1.02]">
+                <i class="fa-solid fa-venus text-base text-rose-400"></i>
                 <span class="font-black">Soy Mujer</span>
               </button>
             </div>
@@ -418,10 +422,10 @@
               <span class="font-semibold">Emparejar con:</span>
               <div class="flex items-center gap-1" id="lookingForButtonGroup">
                 <button type="button" onclick="setUserLookingFor('mujer')" id="btnLookMujer" class="px-2.5 py-1 rounded-lg font-bold border border-rose-500/40 bg-rose-500/20 text-rose-300 text-[10px] transition">
-                  👩 Mujeres
+                  <i class="fa-solid fa-venus mr-1"></i>Mujeres
                 </button>
                 <button type="button" onclick="setUserLookingFor('hombre')" id="btnLookHombre" class="px-2.5 py-1 rounded-lg font-bold border border-dark-700 bg-dark-900 text-slate-400 hover:text-white text-[10px] transition">
-                  👨 Hombres
+                  <i class="fa-solid fa-mars mr-1"></i>Hombres
                 </button>
                 <button type="button" onclick="setUserLookingFor('todos')" id="btnLookTodos" class="px-2.5 py-1 rounded-lg font-bold border border-dark-700 bg-dark-900 text-slate-400 hover:text-white text-[10px] transition">
                   ⚡ Ambos
@@ -430,40 +434,64 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between text-xs font-bold text-slate-300">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-tags text-amber-400"></i> Categoría erótica:</span>
-            <span id="selectedTagBadge" class="text-amber-400 text-[11px] font-black uppercase">#General</span>
+          <!-- Cabecera de Categorías -->
+          <div class="flex items-center justify-between text-xs font-bold text-slate-300 pt-1">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-tags text-amber-400"></i> Categoría de Interés:</span>
+            <span id="selectedTagBadge" class="text-amber-400 text-[11px] font-black uppercase tracking-wider">#TODO +18</span>
           </div>
 
+          <!-- 4 Tarjetas de Categoría con Iconos Vectoriales Estilizados -->
           <div class="grid grid-cols-2 gap-2.5 text-xs font-bold">
-            <button type="button" onclick="selectInterestTag('general')" data-tag="general" class="tag-selector p-3 rounded-2xl border border-amber-500 bg-amber-500/20 text-amber-300 text-left flex items-center gap-2.5 transition">
-              <span class="text-base">🔥</span>
-              <div>
-                <div class="font-black">Todo +18</div>
-                <div class="text-[10px] opacity-75 font-normal">Sin filtros (Rápido)</div>
+            <button type="button" onclick="selectInterestTag('general')" data-tag="general" class="tag-selector p-3 rounded-2xl border border-amber-500 bg-amber-500/20 text-amber-300 text-left flex items-center gap-3 transition hover:scale-[1.01] shadow-sm">
+              <div class="w-9 h-9 rounded-xl bg-amber-500/30 text-amber-400 flex items-center justify-center text-sm flex-shrink-0">
+                <i class="fa-solid fa-fire-flame-curved"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="font-black text-white leading-tight">Todo +18</div>
+                <div class="text-[10px] text-amber-200/80 font-normal truncate">Sin filtros (Rápido)</div>
               </div>
             </button>
-            <button type="button" onclick="selectInterestTag('parejas')" data-tag="parejas" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition">
-              <span class="text-base">💋</span>
-              <div>
-                <div class="font-black">Parejas</div>
-                <div class="text-[10px] opacity-75 font-normal">Tríos y parejas</div>
+
+            <button type="button" onclick="selectInterestTag('parejas')" data-tag="parejas" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-3 transition hover:scale-[1.01]">
+              <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm flex-shrink-0">
+                <i class="fa-solid fa-heart"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="font-black text-white leading-tight">Parejas</div>
+                <div class="text-[10px] text-slate-400 font-normal truncate">Tríos y parejas</div>
               </div>
             </button>
-            <button type="button" onclick="selectInterestTag('solo')" data-tag="solo" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition">
-              <span class="text-base">😈</span>
-              <div>
-                <div class="font-black">Show Solo</div>
-                <div class="text-[10px] opacity-75 font-normal">Exhibición 1v1</div>
+
+            <button type="button" onclick="selectInterestTag('solo')" data-tag="solo" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-3 transition hover:scale-[1.01]">
+              <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm flex-shrink-0">
+                <i class="fa-solid fa-video"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="font-black text-white leading-tight">Show Solo</div>
+                <div class="text-[10px] text-slate-400 font-normal truncate">Exhibición 1v1</div>
               </div>
             </button>
-            <button type="button" onclick="selectInterestTag('fetish')" data-tag="fetish" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition">
-              <span class="text-base">⛓️</span>
-              <div>
-                <div class="font-black">Kink & Fetish</div>
-                <div class="text-[10px] opacity-75 font-normal">Fetiches privados</div>
+
+            <button type="button" onclick="selectInterestTag('fetish')" data-tag="fetish" class="tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-3 transition hover:scale-[1.01]">
+              <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm flex-shrink-0">
+                <i class="fa-solid fa-masks-theater"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="font-black text-white leading-tight">Kink & Fetish</div>
+                <div class="text-[10px] text-slate-400 font-normal truncate">Fetiches privados</div>
               </div>
             </button>
+          </div>
+
+          <!-- Buscador de intereses personalizados (Estilo Omegle) -->
+          <div class="pt-0.5">
+            <div class="flex items-center gap-2 bg-dark-950 border border-dark-800 focus-within:border-amber-500/60 rounded-xl px-3 py-2 text-xs transition">
+              <i class="fa-solid fa-hashtag text-amber-400 text-xs"></i>
+              <input type="text" id="customInterestInput" placeholder="Añadir tema personalizado (ej. #latino, #charla)..." class="bg-transparent border-none text-slate-200 placeholder-slate-500 focus:outline-none w-full text-xs">
+              <button type="button" onclick="addCustomInterestTag()" class="px-2.5 py-1 rounded-lg bg-dark-800 hover:bg-dark-700 text-[10px] font-bold text-amber-300 transition">
+                Fijar
+              </button>
+            </div>
           </div>
         </div>
 

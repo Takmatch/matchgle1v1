@@ -353,29 +353,67 @@ window.setLobbyMode = function (mode) {
 window.selectInterestTag = function (tag) {
   selectedTag = tag;
   const tagLabels = {
-    general: '#Todo +18',
-    parejas: '#Parejas',
-    solo: '#Show Solo',
-    fetish: '#Fetish & Kink'
+    general: '#TODO +18',
+    parejas: '#PAREJAS',
+    solo: '#SHOW SOLO',
+    fetish: '#KINK & FETISH'
   };
 
   if (selectedTagBadge) {
-    selectedTagBadge.textContent = tagLabels[tag] || `#${tag}`;
+    selectedTagBadge.textContent = tagLabels[tag] || `#${tag.toUpperCase()}`;
   }
   if (roomCategoryLabel) {
-    roomCategoryLabel.textContent = tagLabels[tag] || `#${tag}`;
+    roomCategoryLabel.textContent = tagLabels[tag] || `#${tag.toUpperCase()}`;
   }
 
-  // Actualizar estilos de los botones de categoría
+  // Limpiar input personalizado si se elige una tarjeta fija
+  const customInput = document.getElementById('customInterestInput');
+  if (customInput) customInput.value = '';
+
+  // Actualizar estilos de las 4 tarjetas de categoría
   document.querySelectorAll('.tag-selector').forEach(btn => {
     const btnTag = btn.getAttribute('data-tag');
     if (btnTag === tag) {
-      btn.className = 'tag-selector p-3 rounded-2xl border border-amber-500 bg-amber-500/20 text-amber-300 text-left flex items-center gap-2.5 transition';
+      btn.className = 'tag-selector p-3 rounded-2xl border border-amber-500 bg-amber-500/20 text-amber-300 text-left flex items-center gap-3 transition hover:scale-[1.01] shadow-sm';
     } else {
-      btn.className = 'tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-2.5 transition';
+      btn.className = 'tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-3 transition hover:scale-[1.01]';
     }
   });
 };
+
+window.addCustomInterestTag = function () {
+  const customInput = document.getElementById('customInterestInput');
+  if (!customInput) return;
+  let val = customInput.value.trim().replace(/^#/, '').toLowerCase();
+  if (!val) return;
+  val = val.slice(0, 25);
+  selectedTag = val;
+
+  if (selectedTagBadge) {
+    selectedTagBadge.textContent = `#${val.toUpperCase()}`;
+  }
+  if (roomCategoryLabel) {
+    roomCategoryLabel.textContent = `#${val.toUpperCase()}`;
+  }
+
+  // Deseleccionar las 4 tarjetas predeterminadas
+  document.querySelectorAll('.tag-selector').forEach(btn => {
+    btn.className = 'tag-selector p-3 rounded-2xl border border-dark-700 bg-dark-950 text-slate-300 hover:border-dark-600 text-left flex items-center gap-3 transition hover:scale-[1.01]';
+  });
+
+  customInput.value = `#${val}`;
+};
+
+// Atajo Enter para el input de interés personalizado
+const customInterestInput = document.getElementById('customInterestInput');
+if (customInterestInput) {
+  customInterestInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomInterestTag();
+    }
+  });
+}
 
 // ==================== GESTIÓN DE GÉNERO Y PREFERENCIA HETERO ====================
 
