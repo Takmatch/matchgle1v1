@@ -43,6 +43,7 @@ let callSeconds = 0;
 const landingScreen = document.getElementById('landingScreen');
 const ageGateModal = document.getElementById('ageGateModal');
 const checkAge = document.getElementById('checkAge');
+const checkErotic = document.getElementById('checkErotic');
 const checkRecording = document.getElementById('checkRecording');
 const checkModeration = document.getElementById('checkModeration');
 const btnAcceptAge = document.getElementById('btnAcceptAge');
@@ -163,12 +164,13 @@ function showLobby() {
 }
 
 function checkAgeGateCheckboxes() {
-  if (btnAcceptAge && checkAge && checkRecording && checkModeration) {
-    btnAcceptAge.disabled = !(checkAge.checked && checkRecording.checked && checkModeration.checked);
+  if (btnAcceptAge && checkAge && checkErotic && checkRecording && checkModeration) {
+    btnAcceptAge.disabled = !(checkAge.checked && checkErotic.checked && checkRecording.checked && checkModeration.checked);
   }
 }
 
 if (checkAge) checkAge.addEventListener('change', checkAgeGateCheckboxes);
+if (checkErotic) checkErotic.addEventListener('change', checkAgeGateCheckboxes);
 if (checkRecording) checkRecording.addEventListener('change', checkAgeGateCheckboxes);
 if (checkModeration) checkModeration.addEventListener('change', checkAgeGateCheckboxes);
 
