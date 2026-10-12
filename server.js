@@ -18,6 +18,10 @@ const ADMIN_PIN = process.env.ADMIN_PIN || process.env.admin || 'xbox360.ñ.';
 // Middleware de archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check para keep-alive / UptimeRobot / Googlebot
+app.get('/health', (req, res) => res.status(200).send('OK'));
+app.get('/ping', (req, res) => res.status(200).send('pong'));
+
 // ==================== ESTADO DEL SERVIDOR EN MEMORIA ====================
 
 // 1. Salas fijas temáticas (+18)
