@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const { Server } = require('socket.io');
 const path = require('path');
 
@@ -472,4 +473,21 @@ server.listen(PORT, () => {
   console.log(`🔥 Servidor Matchgle 1v1 (Omegle Engine) en http://localhost:${PORT}`);
   console.log(`🛡️ Panel de Moderación y Relay TURN activo`);
   console.log(`===============================================`);
+
+  // ==================== AUTO-PING KEEP-ALIVE (RENDER) ====================
+  // Evita que Render duerma el servidor tras 15 minutos de inactividad
+  const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL || 'https://matchgle1v1.onrender.com';
+  const PING_INTERVAL_MS = 14 * 60 * 1000; // Cada 14 minutos
+
+  if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+    console.log(`⏱️ Keep-Alive activado hacia: ${RENDER_EXTERNAL_URL}/ping (cada 14m)`);
+    setInterval(() => {
+      https.get(`${RENDER_EXTERNAL_URL}/ping`, (res) => {
+        console.log(`💓 [Keep-Alive] Ping enviado. Estado: ${res.statusCode}`);
+      }).on('error', (err) => {
+        console.error(`⚠️ [Keep-Alive] Error al hacer ping:`, err.message);
+      });
+    }, PING_INTERVAL_MS);
+  }
 });
+
