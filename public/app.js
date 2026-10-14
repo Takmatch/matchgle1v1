@@ -968,7 +968,19 @@ if (chatForm) {
   chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = chatInput ? chatInput.value.trim() : '';
-    if (!text || !currentRoomId) return;
+    if (!text) return;
+    
+    // Si no hay sala emparejada todavía, avisar amistosamente
+    if (!currentRoomId) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'p-2 rounded-xl text-center text-[11px] text-amber-300/80 bg-amber-500/10 border border-amber-500/20';
+      msgDiv.textContent = '⏳ Esperando a que conectes con una pareja para chatear.';
+      if (chatMessages) {
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      return;
+    }
 
     socket.emit('send-chat', {
       roomId: currentRoomId,
@@ -977,6 +989,17 @@ if (chatForm) {
     });
 
     if (chatInput) chatInput.value = '';
+  });
+}
+
+// Asegurar que al escribir en el chat no se dispare el salto de sala (Space / ESC)
+if (chatInput) {
+  chatInput.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (chatForm) chatForm.dispatchEvent(new Event('submit'));
+    }
   });
 }
 
