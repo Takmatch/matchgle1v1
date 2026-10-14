@@ -86,6 +86,7 @@ function isStrictHetero(a, b) {
 }
 
 function isGenderCompatible(a, b) {
+  // Parejas y Mujeres tienen prioridad de match con quienes las busquen
   const aWantsB = a.lookingFor === 'todos' || a.lookingFor === b.gender;
   const bWantsA = b.lookingFor === 'todos' || b.lookingFor === a.gender;
   return aWantsB && bWantsA;
@@ -237,7 +238,8 @@ io.on('connection', (socket) => {
   socket.on('find-match', ({ tag = 'general', gender = 'hombre', lookingFor }) => {
     leaveCurrentRoomOrQueue(socket);
 
-    const safeGender = (gender === 'mujer') ? 'mujer' : 'hombre';
+    const allowedGenders = ['hombre', 'mujer', 'pareja', 'trans'];
+    const safeGender = allowedGenders.includes(gender) ? gender : 'hombre';
     const safeLookingFor = lookingFor || (safeGender === 'mujer' ? 'hombre' : 'mujer');
 
     matchmakingQueue.push({
@@ -256,11 +258,12 @@ io.on('connection', (socket) => {
     setTimeout(processMatchmaking, 100);
   });
 
-  // 3. Saltar a la siguiente persona (Botón "Next / Próximo" de Omegle)
+  // 3. Saltar a la siguiente persona (Botón "Next / Próximo" de Omegle / Flingster)
   socket.on('next-match', ({ tag = 'general', gender = 'hombre', lookingFor }) => {
     leaveCurrentRoomOrQueue(socket, 'skipped');
 
-    const safeGender = (gender === 'mujer') ? 'mujer' : 'hombre';
+    const allowedGenders = ['hombre', 'mujer', 'pareja', 'trans'];
+    const safeGender = allowedGenders.includes(gender) ? gender : 'hombre';
     const safeLookingFor = lookingFor || (safeGender === 'mujer' ? 'hombre' : 'mujer');
 
     matchmakingQueue.push({
@@ -275,6 +278,17 @@ io.on('connection', (socket) => {
     socket.emit('searching-match', { tag, gender: safeGender, lookingFor: safeLookingFor });
     broadcastSystemStats();
     setTimeout(processMatchmaking, 100);
+  });
+
+  // 3.1 Reacciones interactivas en vivo (Estilo Flingster: 🔥, 💋, 😈, 👏, 🙈)
+  socket.on('send-reaction', ({ reaction, roomId }) => {
+    const targetRoomId = roomId || socket.data.currentRoom;
+    if (!targetRoomId) return;
+
+    socket.to(targetRoomId).emit('peer-reaction', {
+      senderId: socket.id,
+      reaction: String(reaction).substring(0, 10)
+    });
   });
 
   // 4. Detener búsqueda o salir

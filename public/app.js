@@ -65,11 +65,16 @@ const btnStartAutoMatch = document.getElementById('btnStartAutoMatch');
 
 const btnGenderHombre = document.getElementById('btnGenderHombre');
 const btnGenderMujer = document.getElementById('btnGenderMujer');
+const btnGenderPareja = document.getElementById('btnGenderPareja');
+const btnGenderTrans = document.getElementById('btnGenderTrans');
 const btnLookMujer = document.getElementById('btnLookMujer');
 const btnLookHombre = document.getElementById('btnLookHombre');
+const btnLookPareja = document.getElementById('btnLookPareja');
 const btnLookTodos = document.getElementById('btnLookTodos');
 const localGenderBadge = document.getElementById('localGenderBadge');
 const remoteGenderBadge = document.getElementById('remoteGenderBadge');
+const liveReactionsBar = document.getElementById('liveReactionsBar');
+const reactionsOverlay = document.getElementById('reactionsOverlay');
 
 const badgeSuite1 = document.getElementById('badgeSuite1');
 const badgeSuite2 = document.getElementById('badgeSuite2');
@@ -413,12 +418,15 @@ if (customInterestInput) {
   });
 }
 
-// ==================== GESTIÓN DE GÉNERO Y PREFERENCIA HETERO ====================
+// ==================== GESTIÓN DE GÉNERO Y PREFERENCIA (FLINGSTER ENGINE) ====================
+const validGenders = ['hombre', 'mujer', 'pareja', 'trans'];
 
 window.setUserGender = function (gender) {
-  userGender = (gender === 'mujer') ? 'mujer' : 'hombre';
-  // Por defecto, emparejar con el sexo opuesto
-  userLookingFor = (userGender === 'mujer') ? 'hombre' : 'mujer';
+  userGender = validGenders.includes(gender) ? gender : 'hombre';
+  // Por defecto, emparejar según recomendación inteligente
+  if (userGender === 'mujer') userLookingFor = 'hombre';
+  else if (userGender === 'hombre') userLookingFor = 'mujer';
+  else userLookingFor = 'todos';
 
   localStorage.setItem('matchgle_user_gender', userGender);
   localStorage.setItem('matchgle_looking_for', userLookingFor);
@@ -433,22 +441,30 @@ window.setUserLookingFor = function (lookingFor) {
 };
 
 function updateGenderUI() {
-  // 1. Botones de "Soy"
-  if (btnGenderHombre && btnGenderMujer) {
-    if (userGender === 'hombre') {
-      btnGenderHombre.className = 'py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 flex items-center justify-center gap-2 transition hover:scale-[1.02] shadow-sm';
-      btnGenderMujer.className = 'py-2.5 px-3 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex items-center justify-center gap-2 transition hover:scale-[1.02]';
-    } else {
-      btnGenderHombre.className = 'py-2.5 px-3 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex items-center justify-center gap-2 transition hover:scale-[1.02]';
-      btnGenderMujer.className = 'py-2.5 px-3 rounded-xl border border-rose-500 bg-rose-500/20 text-rose-300 flex items-center justify-center gap-2 transition hover:scale-[1.02] shadow-sm';
-    }
-  }
+  // 1. Botones de "¿Quién eres?" (Hombre, Mujer, Pareja, Trans)
+  const myGenderBtns = [
+    { el: btnGenderHombre, val: 'hombre', color: 'amber' },
+    { el: btnGenderMujer, val: 'mujer', color: 'rose' },
+    { el: btnGenderPareja, val: 'pareja', color: 'indigo' },
+    { el: btnGenderTrans, val: 'trans', color: 'purple' }
+  ];
 
-  // 2. Botones de "Busco"
+  myGenderBtns.forEach(item => {
+    if (item.el) {
+      if (userGender === item.val) {
+        item.el.className = `py-2 px-2 rounded-xl border border-${item.color}-500 bg-${item.color}-500/20 text-${item.color}-300 flex flex-col items-center justify-center gap-1 transition scale-[1.02] shadow-sm font-black`;
+      } else {
+        item.el.className = 'py-2 px-2 rounded-xl border border-dark-700 bg-dark-900 text-slate-300 hover:border-dark-600 flex flex-col items-center justify-center gap-1 transition';
+      }
+    }
+  });
+
+  // 2. Botones de "¿Con quién quieres coincidir?"
   const lookBtns = [
-    { el: btnLookMujer, val: 'mujer', activeClass: 'px-2.5 py-1 rounded-lg font-bold border border-rose-500/40 bg-rose-500/20 text-rose-300 text-[10px] transition' },
-    { el: btnLookHombre, val: 'hombre', activeClass: 'px-2.5 py-1 rounded-lg font-bold border border-amber-500/40 bg-amber-500/20 text-amber-300 text-[10px] transition' },
-    { el: btnLookTodos, val: 'todos', activeClass: 'px-2.5 py-1 rounded-lg font-bold border border-purple-500/40 bg-purple-500/20 text-purple-300 text-[10px] transition' }
+    { el: btnLookMujer, val: 'mujer', activeClass: 'py-1.5 px-2 rounded-lg font-bold border border-rose-500/50 bg-rose-500/20 text-rose-300 text-[10px] text-center transition' },
+    { el: btnLookHombre, val: 'hombre', activeClass: 'py-1.5 px-2 rounded-lg font-bold border border-amber-500/50 bg-amber-500/20 text-amber-300 text-[10px] text-center transition' },
+    { el: btnLookPareja, val: 'pareja', activeClass: 'py-1.5 px-2 rounded-lg font-bold border border-indigo-500/50 bg-indigo-500/20 text-indigo-300 text-[10px] text-center transition' },
+    { el: btnLookTodos, val: 'todos', activeClass: 'py-1.5 px-2 rounded-lg font-bold border border-purple-500/50 bg-purple-500/20 text-purple-300 text-[10px] text-center transition' }
   ];
 
   lookBtns.forEach(item => {
@@ -456,20 +472,27 @@ function updateGenderUI() {
       if (userLookingFor === item.val) {
         item.el.className = item.activeClass;
       } else {
-        item.el.className = 'px-2.5 py-1 rounded-lg font-bold border border-dark-700 bg-dark-900 text-slate-400 hover:text-white text-[10px] transition';
+        item.el.className = 'py-1.5 px-2 rounded-lg font-bold border border-dark-700 bg-dark-900 text-slate-400 hover:text-white text-[10px] text-center transition';
       }
     }
   });
 
   // 3. Badge en la pantalla de cámara local
   if (localGenderBadge) {
-    if (userGender === 'mujer') {
-      localGenderBadge.textContent = '👩 Mujer';
-      localGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
-    } else {
-      localGenderBadge.textContent = '👨 Hombre';
-      localGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
-    }
+    const genderLabels = {
+      mujer: '👩 Mujer',
+      hombre: '👨 Hombre',
+      pareja: '👥 Pareja',
+      trans: '⚧ Trans'
+    };
+    const badgeColors = {
+      mujer: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+      hombre: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      pareja: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+      trans: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+    };
+    localGenderBadge.textContent = genderLabels[userGender] || 'Tú';
+    localGenderBadge.className = `text-[10px] px-2 py-0.5 rounded-full font-bold border ${badgeColors[userGender] || 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`;
   }
 }
 
@@ -551,9 +574,17 @@ window.stopMatchingAndLeave = function () {
 
   if (chatDrawer) chatDrawer.classList.add('translate-x-[110%]');
   resetChatMessages();
+  if (liveReactionsBar) {
+    liveReactionsBar.classList.add('hidden');
+    liveReactionsBar.classList.remove('flex');
+  }
 };
 
 function showRadarWaiting() {
+  if (liveReactionsBar) {
+    liveReactionsBar.classList.add('hidden');
+    liveReactionsBar.classList.remove('flex');
+  }
   if (waitingPlaceholder) waitingPlaceholder.classList.remove('hidden');
   if (remoteVideo) remoteVideo.srcObject = null;
   if (remoteGenderBadge) remoteGenderBadge.classList.add('hidden');
@@ -610,17 +641,31 @@ socket.on('match-found', async ({ roomId, partnerId, isInitiator, tag, myGender,
 
   // Mostrar el género de la pareja emparejada
   if (remoteGenderBadge) {
-    if (partnerGender === 'mujer') {
-      remoteGenderBadge.textContent = '👩 Mujer';
-      remoteGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
-      remoteGenderBadge.classList.remove('hidden');
-    } else if (partnerGender === 'hombre') {
-      remoteGenderBadge.textContent = '👨 Hombre';
-      remoteGenderBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+    const partnerLabels = {
+      mujer: '👩 Mujer',
+      hombre: '👨 Hombre',
+      pareja: '👥 Pareja',
+      trans: '⚧ Trans'
+    };
+    const partnerBadgeStyles = {
+      mujer: 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30',
+      hombre: 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30',
+      pareja: 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30',
+      trans: 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30'
+    };
+    if (partnerLabels[partnerGender]) {
+      remoteGenderBadge.textContent = partnerLabels[partnerGender];
+      remoteGenderBadge.className = partnerBadgeStyles[partnerGender];
       remoteGenderBadge.classList.remove('hidden');
     } else {
       remoteGenderBadge.classList.add('hidden');
     }
+  }
+
+  // Activar barra de reacciones rápidas interactivas
+  if (liveReactionsBar) {
+    liveReactionsBar.classList.remove('hidden');
+    liveReactionsBar.classList.add('flex');
   }
 
   if (roomCategoryLabel) roomCategoryLabel.textContent = `#${tag.toUpperCase()}`;
@@ -975,6 +1020,52 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.innerText = text;
   return div.innerHTML;
+}
+
+// ==================== 7.1 REACCIONES EN VIVO ESTILO FLINGSTER ====================
+
+window.sendLiveReaction = function (emoji) {
+  if (!currentRoomId) return;
+
+  socket.emit('send-reaction', {
+    reaction: emoji,
+    roomId: currentRoomId
+  });
+
+  // Mostrar la reacción también en mi pantalla de forma sutil
+  triggerFloatingReaction(emoji, true);
+};
+
+socket.on('peer-reaction', ({ reaction }) => {
+  triggerFloatingReaction(reaction, false);
+});
+
+function triggerFloatingReaction(emoji, isLocal = false) {
+  if (!reactionsOverlay) return;
+
+  const bubble = document.createElement('div');
+  const randomX = Math.floor(Math.random() * 60) + 20; // 20% a 80% del ancho
+  const randomRotate = Math.floor(Math.random() * 40) - 20;
+
+  bubble.className = 'absolute text-4xl sm:text-5xl select-none pointer-events-none drop-shadow-2xl transition-all duration-1000 ease-out transform';
+  bubble.style.left = `${randomX}%`;
+  bubble.style.bottom = '20px';
+  bubble.style.opacity = '1';
+  bubble.style.transform = `scale(0.5) rotate(${randomRotate}deg)`;
+  bubble.textContent = emoji;
+
+  reactionsOverlay.appendChild(bubble);
+
+  // Animación flotante hacia arriba
+  requestAnimationFrame(() => {
+    bubble.style.bottom = '65%';
+    bubble.style.opacity = '0';
+    bubble.style.transform = `scale(1.5) rotate(${randomRotate * 2}deg)`;
+  });
+
+  setTimeout(() => {
+    if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
+  }, 1050);
 }
 
 // ==================== 8. REPORTES & SEGURIDAD ====================
